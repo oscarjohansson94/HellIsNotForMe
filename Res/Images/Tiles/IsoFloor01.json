@@ -1,0 +1,20 @@
+{"frames": [
+
+{
+	"filename": "IsoFloorPurple.png",
+	"frame": {"x":0,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "IsoFloor01.png",
+	"format": "RGBA8888",
+	"size": {"w":62,"h":32},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:43d697cffa5af7faca4684593fe9f350:29b2ef79106464987d101f23b2f6580b:dae0d31cc057241e2f58a50fae40a2e6$"
+}
+}

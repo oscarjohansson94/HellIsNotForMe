@@ -1,38 +1,57 @@
 var test_state = {
+    debug: true,
     playerSpeed: 300,
     minPointerDistance: 30,
     animationSpeed: 7,
     preload: function() {
-        // Sprite sheet containing all player movements
+        // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
 
-        //Map
-        this.game.load.tilemap('MyTilemap', '../Res/Images/Maps/firstLevel.json', null, Phaser.Tilemap.TILED_JSON);
-        this.game.load.image('tiles', '../Res/Images/Tiles/fourtiles.png');
+        // Load map tiles
+        game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/IsoFloor01.png', '../Res/Images/Tiles/IsoFloor01.json');
+
+        // Increase world size
+        game.world.setBounds(0, 0, 2520, 1260);
     },
     create: function() {
 
-        // Set map
-        map = this.game.add.tilemap('MyTilemap');
-        map.addTilesetImage('tiles', 'tiles');
-
-        terrainLayer = map.createLayer('MyTerrain');
-        terrainLayer.resizeWorld();
-        terrainLayer.wrap = true;
-
-        lavaLayer = map.createLayer('Lava');
-        lavaLayer.resizeWorld();
-        lavaLayer.wrap = true;
-
-
         // Set background color
-        game.stage.backgroundColor = "#FFFFFF";
+        game.stage.backgroundColor = "#000000";
 
-        // Set Player
-        player = this.game.add.sprite(100,100, 'PlayerSprite');
+        // Isometric
+        game.plugins.add(new Phaser.Plugin.Isometric(game));
+        game.iso.anchor.setTo(0.5, 0.1);
+
+        // Create groups
+        floorGroup = game.add.group();
+        obstacleGroup = game.add.group();
+
+        // Enable physics for groups
+        obstacleGroup.enableBody = true;
+        obstacleGroup.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
+        floorGroup.enableBody = true;
+        floorGroup.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
+
+        // Set physics
+        game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
+
+        // Generate map
+        var tileSizeX = 36;
+        var tileSizeY = 36;
+        for( var y = tileSizeY; y <= game.physics.isoArcade.bounds.frontY - tileSizeY; y += tileSizeY) {
+            for(var x = tileSizeX; x <= game.physics.isoArcade.bounds.frontX - tileSizeX; x += tileSizeX){
+                tile = game.add.isoSprite(x,y, 0,'tileset','floor', floorGroup);
+                tile.anchor.set(0.5, 1);
+            }
+        }
+
+        // Create player
+        player = game.add.isoSprite(100,100,0, 'PlayerSprite',0, obstacleGroup);
+
         player.anchor.x = 0.5;
         player.anchor.y = 0.5;
         player.scale.setTo(0.3,0.3);
+        
         player.animations.add('PlayerIdleRight', [0,1,2,3]);
         player.animations.add('PlayerRunFrontLeft', [4,5,6,7]);
         player.animations.add('PlayerRunFrontRight', [8,9,10,11]);
@@ -51,25 +70,19 @@ var test_state = {
         player.animations.add('PlayerIdleBack', [62,63,63,64,65]);
         player.animations.play('PlayerIdleFront', 7, true);
 
-        // Set physics
-        game.physics.enable(player, Phaser.Physics.ARCADE);
-        game.physics.startSystem(Phaser.Physics.ARCADE);
+        player.body.collideWorldBounds = true;
 
-        // Add label
-        degreeLabel = game.add.text(20,20, "");
+        // Start physics
+        game.physics.isoArcade.enable(player);
 
-        // Camera
+        // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
-
-        map.setCollisionBetween(0, 10000, true, lavaLayer);
     },
     update: function() {
-        game.physics.arcade.collide(player,lavaLayer);
         // Get angle between pointer and player
         var pointerAngle = game.physics.arcade.angleToPointer(player);
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
         var minPointerDistance = 30;
-
 
         if(pointerDistance >= this.minPointerDistance){
             if(game.input.activePointer.isDown){
@@ -88,7 +101,15 @@ var test_state = {
             player.body.velocity.y = 0;
             player.animations.play('PlayerIdleFront', this.animationSpeed, true);
         }
-        degreeLabel.setText(pointerAngle);
+    },
+    render: function () {
+        if(this.debug){
+            floorGroup.forEach(function(tile) {
+                game.debug.body(tile, 'rgba(189, 221, 235, 0.6)', false);
+            });
+            game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
+            game.debug.text(game.time.fps, 2, 14, "#a7aebe");
+        }
     }
 };
 
