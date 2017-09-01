@@ -1,4 +1,7 @@
 var test_state = {
+    playerSpeed: 300,
+    minPointerDistance: 30,
+    animationSpeed: 7,
     preload: function() {
         // Sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
@@ -58,23 +61,33 @@ var test_state = {
     update: function() {
         // Get angle between pointer and player
         var pointerAngle = game.physics.arcade.angleToPointer(player);
+        var pointerDistance = game.physics.arcade.distanceToPointer(player);
+        var minPointerDistance = 30;
 
-        
-        if(game.input.activePointer.isDown){
-            // If mouse is pressed, run
-            player.animations.play('PlayerRun' + getAnimationDirection(pointerAngle), 7, true);
+
+        if(pointerDistance >= this.minPointerDistance){
+            if(game.input.activePointer.isDown){
+                // If mouse is pressed, run
+                player.animations.play('PlayerRun' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+                player.body.velocity.x = Math.cos(pointerAngle) * this.playerSpeed;
+                player.body.velocity.y = Math.sin(pointerAngle) * this.playerSpeed;
+            } else {
+                // If mouse is not pressed, idle
+                player.animations.play('PlayerIdle' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+                player.body.velocity.x = 0;
+                player.body.velocity.y = 0;
+            }
         } else {
-            // If mouse is not pressed, idle
-            player.animations.play('PlayerIdle' + getAnimationDirection(pointerAngle), 7, true);
             player.body.velocity.x = 0;
             player.body.velocity.y = 0;
+            player.animations.play('PlayerIdleFront', this.animationSpeed, true);
         }
         degreeLabel.setText(pointerAngle);
     }
 };
 
 /*
- * Get the right animation prefix depinding on angle
+ * Get the right animation suffix depinding on angle
  */
 function getAnimationDirection(angle) {
     var pi = 3.1415;
