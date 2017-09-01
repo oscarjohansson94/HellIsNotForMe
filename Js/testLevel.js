@@ -16,9 +16,13 @@ var test_state = {
         map = this.game.add.tilemap('MyTilemap');
         map.addTilesetImage('tiles', 'tiles');
 
-        layer = map.createLayer('MyTerrain');
-        layer.resizeWorld();
-        layer.wrap = true;
+        terrainLayer = map.createLayer('MyTerrain');
+        terrainLayer.resizeWorld();
+        terrainLayer.wrap = true;
+
+        lavaLayer = map.createLayer('Lava');
+        lavaLayer.resizeWorld();
+        lavaLayer.wrap = true;
 
 
         // Set background color
@@ -57,8 +61,10 @@ var test_state = {
         // Camera
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 
+        map.setCollisionBetween(0, 10000, true, lavaLayer);
     },
     update: function() {
+        game.physics.arcade.collide(player,lavaLayer);
         // Get angle between pointer and player
         var pointerAngle = game.physics.arcade.angleToPointer(player);
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
