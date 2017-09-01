@@ -2,8 +2,22 @@ var test_state = {
     preload: function() {
         // Sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
+
+        //Map
+        this.game.load.tilemap('MyTilemap', '../Res/Images/Maps/firstLevel.json', null, Phaser.Tilemap.TILED_JSON);
+        this.game.load.image('tiles', '../Res/Images/Tiles/fourtiles.png');
     },
     create: function() {
+
+        // Set map
+        map = this.game.add.tilemap('MyTilemap');
+        map.addTilesetImage('tiles', 'tiles');
+
+        layer = map.createLayer('MyTerrain');
+        layer.resizeWorld();
+        layer.wrap = true;
+
+
         // Set background color
         game.stage.backgroundColor = "#FFFFFF";
 
