@@ -84,12 +84,15 @@ var test_state = {
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
         var minPointerDistance = 30;
 
+        // Correct for isometric plane
+        var angleCorrection = -Math.PI/4;
+
         if(pointerDistance >= this.minPointerDistance){
             if(game.input.activePointer.isDown){
                 // If mouse is pressed, run
                 player.animations.play('PlayerRun' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
-                player.body.velocity.x = Math.cos(pointerAngle) * this.playerSpeed;
-                player.body.velocity.y = Math.sin(pointerAngle) * this.playerSpeed;
+                player.body.velocity.x = Math.cos(pointerAngle + angleCorrection) * this.playerSpeed;
+                player.body.velocity.y = Math.sin(pointerAngle + angleCorrection) * this.playerSpeed;
             } else {
                 // If mouse is not pressed, idle
                 player.animations.play('PlayerIdle' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
@@ -117,7 +120,7 @@ var test_state = {
  * Get the right animation suffix depinding on angle
  */
 function getAnimationDirection(angle) {
-    var pi = 3.1415;
+    var pi = Math.PI;
     if(angle >= -pi/8 && angle <= pi/8){
         return 'Right';
     } else if(angle >= pi/8 && angle <= 3*pi/8)  {
