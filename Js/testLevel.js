@@ -1,8 +1,9 @@
 var test_state = {
-    debug: true,
+    debug: false,
     playerSpeed: 300,
-    minPointerDistance: 30,
+    minPointerDistance: 50,
     animationSpeed: 7,
+    animationProtection: 0,
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
@@ -51,24 +52,25 @@ var test_state = {
         player.anchor.x = 0.5;
         player.anchor.y = 0.5;
         player.scale.setTo(0.3,0.3);
-        
-        player.animations.add('PlayerIdleRight', [0,1,2,3]);
-        player.animations.add('PlayerRunFrontLeft', [4,5,6,7]);
-        player.animations.add('PlayerRunFrontRight', [8,9,10,11]);
-        player.animations.add('PlayerRunBackRight', [12,13,14,15]);
-        player.animations.add('PlayerRunFront', [16,17,18,19]);
-        player.animations.add('PlayerRunBackLeft', [20,21,22,23]);
-        player.animations.add('PlayerIdleLeft', [24,25,26,27]);
-        player.animations.add('PlayerRunRight', [28,29,30,31]);
-        player.animations.add('PlayerIdleFrontRight', [32,33,34,35]);
-        player.animations.add('PlayerIdleBackLeft', [36,37,38,39]);
-        player.animations.add('PlayerRunLeft', [40,41,42,43]);
-        player.animations.add('PlayerIdleFrontLeft', [44,45,46,47]);
-        player.animations.add('PlayerIdleBackRight', [48,49,50,51]);
-        player.animations.add('PlayerRunBack', [52,53,54,55,56]);
-        player.animations.add('PlayerIdleFront', [57,58,59,60,61]);
-        player.animations.add('PlayerIdleBack', [62,63,63,64,65]);
-        player.animations.play('PlayerIdleFront', 7, true);
+
+        player.animations.add('IdlePlayerRight', [0,1,2,3]);
+        player.animations.add('IdlePlayerLeft', [24,25,26,27]);
+        player.animations.add('IdlePlayerBackLeft', [36,37,38,39]);
+        player.animations.add('IdlePlayerFrontRight', [32,33,34,35]);
+        player.animations.add('IdlePlayerFrontLeft', [44,45,46,47]);
+        player.animations.add('IdlePlayerBackRight', [48,49,50,51]);
+        player.animations.add('IdlePlayerFront', [57,58,59,60,61]);
+        player.animations.add('IdlePlayerBack', [62,63,63,64,65]);
+        player.animations.add('RunPlayerFrontLeft', [4,5,6,7]);
+        player.animations.add('RunPlayerFrontRight', [8,9,10,11]);
+        player.animations.add('RunPlayerBackRight', [12,13,14,15]);
+        player.animations.add('RunPlayerFront', [16,17,18,19]);
+        player.animations.add('RunPlayerBackLeft', [20,21,22,23]);
+        player.animations.add('RunPlayerRight', [28,29,30,31]);
+        player.animations.add('RunPlayerLeft', [40,41,42,43]);
+        player.animations.add('RunPlayerBack', [52,53,54,55,56]);
+
+        player.animations.play('IdlePlayerFront', 7, true);
 
         player.body.collideWorldBounds = true;
 
@@ -82,27 +84,33 @@ var test_state = {
         // Get angle between pointer and player
         var pointerAngle = game.physics.arcade.angleToPointer(player);
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
-        var minPointerDistance = 30;
 
         // Correct for isometric plane
         var angleCorrection = -Math.PI/4;
 
-        if(pointerDistance >= this.minPointerDistance){
-            if(game.input.activePointer.isDown){
-                // If mouse is pressed, run
-                player.animations.play('PlayerRun' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
-                player.body.velocity.x = Math.cos(pointerAngle + angleCorrection) * this.playerSpeed;
-                player.body.velocity.y = Math.sin(pointerAngle + angleCorrection) * this.playerSpeed;
+        if(!this.animationProtection){
+            //TODO this should be a utility function with 'Player' paramenter
+            if(pointerDistance >= this.minPointerDistance){
+                if(game.input.activePointer.isDown){
+                    // If mouse is pressed, run
+                    player.animations.play('RunPlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+                    player.body.velocity.x = Math.cos(pointerAngle + angleCorrection) * this.playerSpeed;
+                    player.body.velocity.y = Math.sin(pointerAngle + angleCorrection) * this.playerSpeed;
+                    
+                } else {
+                    // If mouse is not pressed, idle
+                    player.animations.play('IdlePlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+                    player.body.velocity.x = 0;
+                    player.body.velocity.y = 0;
+                }
+                this.animationProtection = 7;
             } else {
-                // If mouse is not pressed, idle
-                player.animations.play('PlayerIdle' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
                 player.body.velocity.x = 0;
                 player.body.velocity.y = 0;
+                player.animations.play('IdlePlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
             }
         } else {
-            player.body.velocity.x = 0;
-            player.body.velocity.y = 0;
-            player.animations.play('PlayerIdleFront', this.animationSpeed, true);
+            this.animationProtection--;
         }
     },
     render: function () {
