@@ -1,9 +1,10 @@
 var test_state = {
     debug: false,
     playerSpeed: 300,
-    minPointerDistance: 50,
+    minTargetDistance: 10,
     animationSpeed: 7,
     animationProtection: 0,
+    playerMoving: false,
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
@@ -21,7 +22,7 @@ var test_state = {
 
         // Isometric
         game.plugins.add(new Phaser.Plugin.Isometric(game));
-        game.iso.anchor.setTo(0.5, 0.1);
+        game.iso.anchor.setTo(0.5, 0.2);
 
         // Create groups
         floorGroup = game.add.group();
@@ -74,6 +75,9 @@ var test_state = {
 
         player.body.collideWorldBounds = true;
 
+        // Create target
+        target = new Phaser.Plugin.Isometric.Point3();
+
         // Start physics
         game.physics.isoArcade.enable(player);
 
@@ -82,35 +86,29 @@ var test_state = {
     },
     update: function() {
         // Get angle between pointer and player
-        var pointerAngle = game.physics.arcade.angleToPointer(player);
+        var pointerAngle = Math.atan2(target.y - player.body.y, target.x - player.body.x);
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
 
         // Correct for isometric plane
         var angleCorrection = -Math.PI/4;
 
-        if(!this.animationProtection){
-            //TODO this should be a utility function with 'Player' paramenter
-            if(pointerDistance >= this.minPointerDistance){
-                if(game.input.activePointer.isDown){
-                    // If mouse is pressed, run
-                    player.animations.play('RunPlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
-                    player.body.velocity.x = Math.cos(pointerAngle + angleCorrection) * this.playerSpeed;
-                    player.body.velocity.y = Math.sin(pointerAngle + angleCorrection) * this.playerSpeed;
-                    
-                } else {
-                    // If mouse is not pressed, idle
-                    player.animations.play('IdlePlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
-                    player.body.velocity.x = 0;
-                    player.body.velocity.y = 0;
-                }
-                this.animationProtection = 7;
-            } else {
+        if(game.input.activePointer.isDown){
+            game.iso.unproject(game.input.activePointer.position, target);
+            this.playerMoving = true;
+        }
+        if(this.playerMoving) {
+            var distancePlayerTarget = Math.sqrt(Math.pow(target.x - player.body.x, 2)+ Math.pow(target.y - player.body.y, 2));
+            //var distancePlayerTarget = game.physics.isoArcade.distanceBetween(player, target);
+            if(distancePlayerTarget <= this.minTargetDistance){
+                this.playerMoving = false;
                 player.body.velocity.x = 0;
                 player.body.velocity.y = 0;
                 player.animations.play('IdlePlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+            } else {
+                player.animations.play('RunPlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+                player.body.velocity.x = Math.cos(pointerAngle) * this.playerSpeed;
+                player.body.velocity.y = Math.sin(pointerAngle) * this.playerSpeed;
             }
-        } else {
-            this.animationProtection--;
         }
     },
     render: function () {
