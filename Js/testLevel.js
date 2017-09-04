@@ -1,10 +1,13 @@
 var test_state = {
-    debug: false,
+    debug: true,
     playerSpeed: 300,
     minTargetDistance: 10,
     animationSpeed: 7,
     animationProtection: 0,
     playerMoving: false,
+    map: map01,
+    nrTilesX: 0,
+    nrTilesY: 0,
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
@@ -12,37 +15,36 @@ var test_state = {
         // Load map tiles
         game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/IsoFloor01.png', '../Res/Images/Tiles/IsoFloor01.json');
 
+        game.time.advancedTiming = true;
+        game.plugins.add(new Phaser.Plugin.Isometric(game));
+
+
         // Increase world size
-        game.world.setBounds(0, 0, 2520, 1260);
+        this.nrTilesX = this.map[0].length; 
+        this.nrTilesY = this.map.length;  
+        var length = this.nrTilesY*tileSize; 
+        var width = this.nrTilesX*tileSize; 
+        var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
+        game.world.setBounds(0, 0, worldWidth , worldWidth);
+
+        // Isometric
+        game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
+        game.iso.anchor.setTo(0.5, 0.1);
     },
     create: function() {
 
-        // Set background color
+    // Set background color
         game.stage.backgroundColor = "#000000";
-
-        // Isometric
-        game.plugins.add(new Phaser.Plugin.Isometric(game));
-        game.iso.anchor.setTo(0.5, 0.2);
 
         // Create groups
         floorGroup = game.add.group();
         obstacleGroup = game.add.group();
 
-        // Enable physics for groups
-        obstacleGroup.enableBody = true;
-        obstacleGroup.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
-        floorGroup.enableBody = true;
-        floorGroup.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
-
-        // Set physics
-        game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
-
         // Generate map
-        var tileSizeX = 36;
-        var tileSizeY = 36;
-        for( var y = tileSizeY; y <= game.physics.isoArcade.bounds.frontY - tileSizeY; y += tileSizeY) {
-            for(var x = tileSizeX; x <= game.physics.isoArcade.bounds.frontX - tileSizeX; x += tileSizeX){
-                tile = game.add.isoSprite(x,y, 0,'tileset','floor', floorGroup);
+        console.log("frontY", game.width);
+        for( var y = 1; y < this.nrTilesY - 1; y++) {
+            for(var x = 1; x < this.nrTilesX - 1; x++){
+                tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset',0, floorGroup);
                 tile.anchor.set(0.5, 1);
             }
         }
@@ -73,13 +75,13 @@ var test_state = {
 
         player.animations.play('IdlePlayerFront', 7, true);
 
-        player.body.collideWorldBounds = true;
 
         // Create target
         target = new Phaser.Plugin.Isometric.Point3();
 
         // Start physics
         game.physics.isoArcade.enable(player);
+        player.body.collideWorldBounds = true;
 
         // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
