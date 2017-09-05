@@ -29,7 +29,9 @@ var test_state = {
         var length = this.nrTilesY*tileSize; 
         var width = this.nrTilesX*tileSize; 
         var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
-        game.world.setBounds(0, 0, worldWidth , worldWidth);
+        game.world.setBounds(0, 0, length*2-4*tileSize, worldWidth*2-4*tileSize);
+        console.log(worldWidth);
+
 
         // Isometric
         game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
