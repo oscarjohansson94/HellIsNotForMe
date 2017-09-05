@@ -16,6 +16,7 @@ var test_state = {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
         this.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
+        this.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
 
         // Load map tiles
         game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
@@ -39,6 +40,7 @@ var test_state = {
         game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
     },
     create: function() {
+        // Set gravity
         game.physics.isoArcade.gravity.setTo(0, 0, -500);
 
         // Set background color
@@ -49,6 +51,7 @@ var test_state = {
         obstacleGroup = game.add.group();
         liquidGroup= game.add.group();
         isoGroup = game.add.group();
+        hudGroup = game.add.group();
 
         // Generate map
 
@@ -94,6 +97,8 @@ var test_state = {
         player.animations.add('RunPlayerBack', [52,53,54,55,56]);
 
         player.animations.play('IdlePlayerFront', 7, true);
+        player.maxHealth = 100;
+        player.health = 100;
 
 
         // Create target
@@ -105,14 +110,24 @@ var test_state = {
 
         // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+
+        // Healthbar
+        healthBar = game.add.image(game.width - 200,game.height - 100, 'HealthBar');
+        healthBar.fixedToCamera = true;
+        healthBar.cropEnabled = true;
+        healthBar.scale.setTo(0.1,0.1);
     },
     update: function() {
 
         if(this.playerBurning){
             fire.body.x = player.body.x;
             fire.body.y = player.body.y;
+            player.health--;
+        } else if(player.health < 100) {
+            player.health++;
         }
-        if(!this.playerBurning && this.map[Math.round(player.body.y/tileSize)+1][Math.ceil(player.body.x /tileSize)+1] == 1){
+
+        if(!this.playerBurning && this.map[Math.ceil(player.body.y/tileSize)+1][Math.ceil(player.body.x /tileSize)+1] == 1){
             this.playerBurning = true;
             fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
             fire.scale.setTo(0.4, 0.4);
@@ -125,10 +140,15 @@ var test_state = {
             fire.destroy();
             this.playerBurning = false;
         }
+
+        // Make the liquids move "naturally"
         liquidGroup.forEach(function (w) {
             w.isoZ = (-2 * Math.sin((game.time.now + (w.isoX * 7)) * 0.004)) + (-1 * Math.sin((game.time.now + (w.isoY * 8)) * 0.005));
             w.alpha = Phaser.Math.clamp(1 + (w.isoZ * 0.1), 0.2, 1);
         });
+
+        // Scale healthbar deping on life
+        healthBar.width = Math.max(player.health, 0);
 
         // Get angle between pointer and player
         game.iso.topologicalSort(isoGroup)
@@ -144,6 +164,7 @@ var test_state = {
         }
         game.world.bringToTop(obstacleGroup);
         game.world.bringToTop(player);
+        game.world.bringToTop(hudGroup);
         if(this.playerMoving) {
             var distancePlayerTarget = Math.sqrt(Math.pow(target.x - player.body.x, 2)+ Math.pow(target.y - player.body.y, 2));
             //var distancePlayerTarget = game.physics.isoArcade.distanceBetween(player, target);
