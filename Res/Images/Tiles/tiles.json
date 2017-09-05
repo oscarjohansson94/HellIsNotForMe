@@ -1,0 +1,28 @@
+{"frames": [
+
+{
+	"filename": "IsoFloor01.png",
+	"frame": {"x":0,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor02.png",
+	"frame": {"x":62,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "tiles.png",
+	"format": "RGBA8888",
+	"size": {"w":124,"h":32},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:18165a2493a508df259d02dbd54894b5:4415f8a2d530eeed0678fe6c5be5f54c:accbe1e7e294ded8391337fc1c446319$"
+}
+}

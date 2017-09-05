@@ -5,18 +5,22 @@ var test_state = {
     animationSpeed: 7,
     animationProtection: 0,
     playerMoving: false,
-    map: map01,
+    map: map02,
     nrTilesX: 0,
     nrTilesY: 0,
+    liquidGroup: [],
+    isoGroup: [],
+    obstacleGroup: [],
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
 
         // Load map tiles
-        game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/IsoFloor01.png', '../Res/Images/Tiles/IsoFloor01.json');
+        game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
 
         game.time.advancedTiming = true;
         game.plugins.add(new Phaser.Plugin.Isometric(game));
+        game.iso.anchor.set(0.5, 0);
 
 
         // Increase world size
@@ -29,22 +33,36 @@ var test_state = {
 
         // Isometric
         game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
-        game.iso.anchor.setTo(0.5, 0.1);
     },
     create: function() {
+        game.physics.isoArcade.gravity.setTo(0, 0, -500);
 
-    // Set background color
+
+        // Set background color
         game.stage.backgroundColor = "#000000";
 
         // Create groups
         floorGroup = game.add.group();
         obstacleGroup = game.add.group();
+        liquidGroup= game.add.group();
+        isoGroup = game.add.group();
 
         // Generate map
-        console.log("frontY", game.width);
+
         for( var y = 1; y < this.nrTilesY - 1; y++) {
             for(var x = 1; x < this.nrTilesX - 1; x++){
-                tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset',0, floorGroup);
+                var tileType = this.map[y][x];
+                var tile;
+                if(tileType == 0) {
+                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map[y][x], floorGroup);
+                } else if(tileType == 1) {
+                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map[y][x], liquidGroup);
+                    tile.isoZ += 6;
+                    liquidGroup.add(tile);
+                    game.physics.isoArcade.enable(tile);
+                    tile.body.collideWorldBounds = true;
+                    tile.body.immovable = true;
+                }
                 tile.anchor.set(0.5, 1);
             }
         }
@@ -52,9 +70,8 @@ var test_state = {
         // Create player
         player = game.add.isoSprite(100,100,0, 'PlayerSprite',0, obstacleGroup);
 
-        player.anchor.x = 0.5;
-        player.anchor.y = 0.5;
         player.scale.setTo(0.3,0.3);
+        player.anchor.set(1,1);
 
         player.animations.add('IdlePlayerRight', [0,1,2,3]);
         player.animations.add('IdlePlayerLeft', [24,25,26,27]);
@@ -87,7 +104,17 @@ var test_state = {
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
     },
     update: function() {
+
+        if(this.map[Math.round(player.body.y/tileSize)+1][Math.ceil(player.body.x /tileSize)+1] == 1){
+            console.log("You are burning, man");
+        }
+        liquidGroup.forEach(function (w) {
+            w.isoZ = (-2 * Math.sin((game.time.now + (w.isoX * 7)) * 0.004)) + (-1 * Math.sin((game.time.now + (w.isoY * 8)) * 0.005));
+            w.alpha = Phaser.Math.clamp(1 + (w.isoZ * 0.1), 0.2, 1);
+        });
+
         // Get angle between pointer and player
+        game.iso.topologicalSort(isoGroup)
         var pointerAngle = Math.atan2(target.y - player.body.y, target.x - player.body.x);
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
 
@@ -98,6 +125,8 @@ var test_state = {
             game.iso.unproject(game.input.activePointer.position, target);
             this.playerMoving = true;
         }
+        game.world.bringToTop(obstacleGroup);
+        game.world.bringToTop(player);
         if(this.playerMoving) {
             var distancePlayerTarget = Math.sqrt(Math.pow(target.x - player.body.x, 2)+ Math.pow(target.y - player.body.y, 2));
             //var distancePlayerTarget = game.physics.isoArcade.distanceBetween(player, target);
