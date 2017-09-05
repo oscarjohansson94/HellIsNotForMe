@@ -1,5 +1,5 @@
 var test_state = {
-    debug: true,
+    debug: false,
     playerSpeed: 300,
     minTargetDistance: 10,
     animationSpeed: 7,
@@ -11,9 +11,11 @@ var test_state = {
     liquidGroup: [],
     isoGroup: [],
     obstacleGroup: [],
+    playerBurning: false,
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
+        this.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
 
         // Load map tiles
         game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
@@ -38,7 +40,6 @@ var test_state = {
     },
     create: function() {
         game.physics.isoArcade.gravity.setTo(0, 0, -500);
-
 
         // Set background color
         game.stage.backgroundColor = "#000000";
@@ -107,8 +108,22 @@ var test_state = {
     },
     update: function() {
 
-        if(this.map[Math.round(player.body.y/tileSize)+1][Math.ceil(player.body.x /tileSize)+1] == 1){
-            console.log("You are burning, man");
+        if(this.playerBurning){
+            fire.body.x = player.body.x;
+            fire.body.y = player.body.y;
+        }
+        if(!this.playerBurning && this.map[Math.round(player.body.y/tileSize)+1][Math.ceil(player.body.x /tileSize)+1] == 1){
+            this.playerBurning = true;
+            fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
+            fire.scale.setTo(0.4, 0.4);
+            fire.anchor.set(1,1);
+            fire.animations.add('fire', [0,1,2,3]);
+            fire.animations.play('fire',15, true);
+            game.physics.isoArcade.enable(fire);
+            fire.body.collideWorldBounds = true;
+        } else if(this.playerBurning && this.map[Math.round(player.body.y/tileSize)+1][Math.ceil(player.body.x /tileSize)+1] != 1){
+            fire.destroy();
+            this.playerBurning = false;
         }
         liquidGroup.forEach(function (w) {
             w.isoZ = (-2 * Math.sin((game.time.now + (w.isoX * 7)) * 0.004)) + (-1 * Math.sin((game.time.now + (w.isoY * 8)) * 0.005));
