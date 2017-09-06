@@ -17,6 +17,8 @@ var test_state = {
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
         this.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
         this.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
+        this.load.image('EnergyBar', '../Res/Images/SpriteSheet/energyBar.png');
+        this.load.image('Hud', '../Res/Images/SpriteSheet/Hud.png');
 
         // Load map tiles
         game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
@@ -33,8 +35,6 @@ var test_state = {
         var width = this.nrTilesX*tileSize; 
         var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
         game.world.setBounds(0, 0, length*2-4*tileSize, worldWidth*2-4*tileSize);
-        console.log(worldWidth);
-
 
         // Isometric
         game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
@@ -111,11 +111,29 @@ var test_state = {
         // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 
+
+        // Scale deping on game size
+        var scale = game.width / 1280;
+
+        //Hud 
+        hud = game.add.image(0,game.height-127*scale, 'Hud');
+        hud.fixedToCamera = true;
+        hud.cropEnabled = true;
+        hud.scale.setTo(scale,scale);
+
         // Healthbar
-        healthBar = game.add.image(game.width - 200,game.height - 100, 'HealthBar');
+        healthBar = game.add.image(game.width - 343*scale,game.height - 108*scale, 'HealthBar');
         healthBar.fixedToCamera = true;
         healthBar.cropEnabled = true;
-        healthBar.scale.setTo(0.1,0.1);
+        healthBar.scale.setTo(scale, scale);
+        healthBar.maxWidth = healthBar.width;
+
+        // Energybar
+        energyBar = game.add.image(game.width - 343*scale,game.height - 54*scale, 'EnergyBar');
+        energyBar.fixedToCamera = true;
+        energyBar.cropEnabled = true;
+        energyBar.scale.setTo(scale, scale);
+        energyBar.maxWidth = energyBar.width;
     },
     update: function() {
 
@@ -127,7 +145,7 @@ var test_state = {
             player.health++;
         }
 
-        if(!this.playerBurning && this.map[Math.ceil(player.body.y/tileSize)+1][Math.ceil(player.body.x /tileSize)+1] == 1){
+        if(!this.playerBurning && this.map[Math.ceil(player.body.y/tileSize - 0.5)+1][Math.ceil(player.body.x /tileSize  - 0.5)+1] == 1){
             this.playerBurning = true;
             fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
             fire.scale.setTo(0.4, 0.4);
@@ -148,7 +166,7 @@ var test_state = {
         });
 
         // Scale healthbar deping on life
-        healthBar.width = Math.max(player.health, 0);
+        healthBar.width = healthBar.maxWidth*Math.max(player.health, 0)/player.maxHealth;
 
         // Get angle between pointer and player
         game.iso.topologicalSort(isoGroup)
