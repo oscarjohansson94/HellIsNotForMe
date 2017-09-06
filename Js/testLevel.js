@@ -5,13 +5,19 @@ var test_state = {
     animationSpeed: 7,
     animationProtection: 0,
     playerMoving: false,
-    map: map02,
+    map: map03,
     nrTilesX: 0,
     nrTilesY: 0,
     liquidGroup: [],
     isoGroup: [],
     obstacleGroup: [],
     playerBurning: false,
+    tileEnum: {
+        EMPTY: 0,
+        FLOOR01: 1,
+        LAVA: 2,
+        BORDER: 3
+    },
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
@@ -29,8 +35,8 @@ var test_state = {
 
 
         // Increase world size
-        this.nrTilesX = this.map[0].length; 
-        this.nrTilesY = this.map.length;  
+        this.nrTilesX = this.map.coords[0].length; 
+        this.nrTilesY = this.map.coords.length;  
         var length = this.nrTilesY*tileSize; 
         var width = this.nrTilesX*tileSize; 
         var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
@@ -52,29 +58,40 @@ var test_state = {
         liquidGroup= game.add.group();
         isoGroup = game.add.group();
         hudGroup = game.add.group();
+        borderGroup = game.add.group();
 
         // Generate map
 
         for( var y = 1; y < this.nrTilesY - 1; y++) {
             for(var x = 1; x < this.nrTilesX - 1; x++){
-                var tileType = this.map[y][x];
+                var tileType = this.map.coords[y][x];
                 var tile;
-                if(tileType == 0) {
-                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map[y][x], floorGroup);
-                } else if(tileType == 1) {
-                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map[y][x], liquidGroup);
+                if(tileType == this.tileEnum.FLOOR01) {
+                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.coords[y][x] - 1, floorGroup);
+                    tile.anchor.set(0.5, 1);
+                } else if(tileType == this.tileEnum.LAVA) {
+                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.coords[y][x] - 1, liquidGroup);
                     tile.isoZ += 6;
                     liquidGroup.add(tile);
                     game.physics.isoArcade.enable(tile);
                     tile.body.collideWorldBounds = true;
                     tile.body.immovable = true;
+                    tile.anchor.set(0.5, 1);
+                } else if(tileType == this.tileEnum.BORDER){
+                    tile = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,null, 0, borderGroup);
+                    tile.enableBody = true;
+                    tile.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
+                    game.physics.isoArcade.enable(tile);
+                    tile.body.setSize(tileSize,tileSize+1,tileSize+1, 0 ,0, 0);
+                    tile.body.immovable = true;
+                    tile.anchor.set(0.5,1);
+                    tile.body.collideWorldBounds = true;
                 }
-                tile.anchor.set(0.5, 1);
             }
         }
 
         // Create player
-        player = game.add.isoSprite(100,100,0, 'PlayerSprite',0, obstacleGroup);
+        player = game.add.isoSprite(this.map.start.x * tileSize,this.map.start.y * tileSize,0, 'PlayerSprite',0, obstacleGroup);
 
         player.scale.setTo(0.3,0.3);
         player.anchor.set(1,1);
@@ -99,7 +116,6 @@ var test_state = {
         player.animations.play('IdlePlayerFront', 7, true);
         player.maxHealth = 100;
         player.health = 100;
-
 
         // Create target
         target = new Phaser.Plugin.Isometric.Point3();
@@ -145,7 +161,8 @@ var test_state = {
             player.health++;
         }
 
-        if(!this.playerBurning && this.map[Math.ceil(player.body.y/tileSize - 0.5)+1][Math.ceil(player.body.x /tileSize  - 0.5)+1] == 1){
+
+        if(!this.playerBurning && getTile(player.body.x, player.body.y, this.map) == this.tileEnum.LAVA){
             this.playerBurning = true;
             fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
             fire.scale.setTo(0.4, 0.4);
@@ -154,10 +171,11 @@ var test_state = {
             fire.animations.play('fire',15, true);
             game.physics.isoArcade.enable(fire);
             fire.body.collideWorldBounds = true;
-        } else if(this.playerBurning && this.map[Math.round(player.body.y/tileSize)+1][Math.ceil(player.body.x /tileSize)+1] != 1){
+        } else if(this.playerBurning && getTile(player.body.x, player.body.y, this.map) != this.tileEnum.LAVA){
             fire.destroy();
             this.playerBurning = false;
         }
+
 
         // Make the liquids move "naturally"
         liquidGroup.forEach(function (w) {
@@ -191,12 +209,23 @@ var test_state = {
                 player.body.velocity.x = 0;
                 player.body.velocity.y = 0;
                 player.animations.play('IdlePlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
-            } else {
+            } else { 
                 player.animations.play('RunPlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
                 player.body.velocity.x = Math.cos(pointerAngle) * this.playerSpeed;
                 player.body.velocity.y = Math.sin(pointerAngle) * this.playerSpeed;
             }
         }
+        borderGroup.forEach(function(w) {
+            game.physics.arcade.overlap(w, player, 
+                function() {
+                    player.body.velocity.x = 0;
+                    player.body.velocity.y = 0;
+                    player.animations.play('IdlePlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+                    game.physics.isoArcade.collide(w,player);
+                }
+                , null, this);
+        });
+
     },
     render: function () {
         if(this.debug){
@@ -204,6 +233,10 @@ var test_state = {
                 game.debug.body(tile, 'rgba(189, 221, 235, 0.6)', false);
             });
             game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
+            borderGroup.forEach(function(tile){
+                game.debug.body(tile, 'rgba(189, 221, 235, 0.6)', false);
+            });
+
             game.debug.text(game.time.fps, 2, 14, "#a7aebe");
         }
     }
@@ -231,4 +264,11 @@ function getAnimationDirection(angle) {
     } else if(angle >= -3*pi/8 && angle <= -pi/8) {
         return 'BackRight';
     }
+}
+
+/* 
+ * Return type of tile 
+ */
+function getTile(x, y, map) {
+    return map.coords[Math.ceil(y/tileSize - 0.5)+1][Math.ceil(x /tileSize  - 0.5)+1];
 }
