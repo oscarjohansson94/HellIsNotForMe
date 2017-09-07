@@ -1,6 +1,8 @@
 var test_state = {
     debug: false,
     playerSpeed: 300,
+    enemyBatSpeed: 200,
+    enemyBatRadius: 500,
     minTargetDistance: 10,
     animationSpeed: 7,
     animationProtection: 0,
@@ -21,6 +23,7 @@ var test_state = {
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
+        this.load.spritesheet('EnemyBatSprite', '../Res/Images/SpriteSheet/EnemyBat.png', 272, 282, 28);
         this.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
         this.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
         this.load.image('EnergyBar', '../Res/Images/SpriteSheet/energyBar.png');
@@ -117,12 +120,35 @@ var test_state = {
         player.maxHealth = 100;
         player.health = 100;
 
+        // Enemy Bat
+        enemyBat= game.add.isoSprite(40 * tileSize,25 * tileSize,0, 'EnemyBatSprite',0, obstacleGroup);
+
+        enemyBat.scale.setTo(0.3,0.3);
+        enemyBat.anchor.set(1,1);
+
+        enemyBat.animations.add('EnemyBatLeft', [0,1,2,3]);
+        enemyBat.animations.add('EnemyBatFrontRight', [4,5,6]);
+        enemyBat.animations.add('EnemyBatRight', [7,8,9,10]);
+        enemyBat.animations.add('EnemyBatFrontLeft', [11,12,13]);
+        enemyBat.animations.add('EnemyBatBackRight', [14,15,16]);
+        enemyBat.animations.add('EnemyBatBack', [17,18,19,20]);
+        enemyBat.animations.add('EnemyBatBackLeft', [21,22,23]);
+        enemyBat.animations.add('EnemyBatFront', [24,25,26,27]);
+
+        enemyBat.animations.play('EnemyBatBack', 7, true);
+        enemyBat.maxHealth = 100;
+        enemyBat.health = 100;
+
+
+
         // Create target
         target = new Phaser.Plugin.Isometric.Point3();
 
         // Start physics
         game.physics.isoArcade.enable(player);
+        game.physics.isoArcade.enable(enemyBat);
         player.body.collideWorldBounds = true;
+        enemyBat.body.collideWorldBounds = true;
 
         // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
@@ -133,12 +159,14 @@ var test_state = {
 
         //Hud 
         hud = game.add.image(0,game.height-127*scale, 'Hud');
+        hudGroup.add(hud);
         hud.fixedToCamera = true;
         hud.cropEnabled = true;
         hud.scale.setTo(scale,scale);
 
         // Healthbar
         healthBar = game.add.image(game.width - 343*scale,game.height - 108*scale, 'HealthBar');
+        hudGroup.add(healthBar);
         healthBar.fixedToCamera = true;
         healthBar.cropEnabled = true;
         healthBar.scale.setTo(scale, scale);
@@ -146,6 +174,7 @@ var test_state = {
 
         // Energybar
         energyBar = game.add.image(game.width - 343*scale,game.height - 54*scale, 'EnergyBar');
+        hudGroup.add(energyBar);
         energyBar.fixedToCamera = true;
         energyBar.cropEnabled = true;
         energyBar.scale.setTo(scale, scale);
@@ -188,7 +217,8 @@ var test_state = {
 
         // Get angle between pointer and player
         game.iso.topologicalSort(isoGroup)
-        var pointerAngle = Math.atan2(target.y - player.body.y, target.x - player.body.x);
+        var playerToTargetAngle = Math.atan2(target.y - player.body.y, target.x - player.body.x);
+        var enemyBatToPlayerAngle = Math.atan2(player.body.y - enemyBat.body.y, player.body.x - enemyBat.body.x);
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
 
         // Correct for isometric plane
@@ -198,9 +228,6 @@ var test_state = {
             game.iso.unproject(game.input.activePointer.position, target);
             this.playerMoving = true;
         }
-        game.world.bringToTop(obstacleGroup);
-        game.world.bringToTop(player);
-        game.world.bringToTop(hudGroup);
         if(this.playerMoving) {
             var distancePlayerTarget = Math.sqrt(Math.pow(target.x - player.body.x, 2)+ Math.pow(target.y - player.body.y, 2));
             //var distancePlayerTarget = game.physics.isoArcade.distanceBetween(player, target);
@@ -208,24 +235,49 @@ var test_state = {
                 this.playerMoving = false;
                 player.body.velocity.x = 0;
                 player.body.velocity.y = 0;
-                player.animations.play('IdlePlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+                player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), this.animationSpeed, true);
             } else { 
-                player.animations.play('RunPlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
-                player.body.velocity.x = Math.cos(pointerAngle) * this.playerSpeed;
-                player.body.velocity.y = Math.sin(pointerAngle) * this.playerSpeed;
+                player.animations.play('RunPlayer' + getAnimationDirection(playerToTargetAngle), this.animationSpeed, true);
+                player.body.velocity.x = Math.cos(playerToTargetAngle) * this.playerSpeed;
+                player.body.velocity.y = Math.sin(playerToTargetAngle) * this.playerSpeed;
             }
         }
+
+        // Update bat, expand for containers with enemies
+        var distanceEnemyBatToPlayer = Math.sqrt(Math.pow(enemyBat.body.x - player.body.x, 2) +Math.pow(enemyBat.body.x - player.body.x, 2));
+        enemyBat.animations.play('EnemyBat' + getAnimationDirection(enemyBatToPlayerAngle), this.animationSpeed, true);
+        if(distanceEnemyBatToPlayer > this.enemyBatRadius || distanceEnemyBatToPlayer < this.minTargetDistance) {
+            enemyBat.body.velocity.x = 0;
+            enemyBat.body.velocity.y = 0;
+            if(distanceEnemyBatToPlayer <= this.minTargetDistance) {
+                player.health -= 2;
+                enemyBat.animations.currentAnim.speed = this.animationSpeed * 10;
+            }
+        } else {
+            enemyBat.body.velocity.x = Math.cos(enemyBatToPlayerAngle) * this.enemyBatSpeed;
+            enemyBat.body.velocity.y = Math.sin(enemyBatToPlayerAngle) * this.enemyBatSpeed;
+        }
+
+        // Check for border collision
         borderGroup.forEach(function(w) {
             game.physics.arcade.overlap(w, player, 
                 function() {
                     player.body.velocity.x = 0;
                     player.body.velocity.y = 0;
-                    player.animations.play('IdlePlayer' + getAnimationDirection(pointerAngle), this.animationSpeed, true);
+                    player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), this.animationSpeed, true);
                     game.physics.isoArcade.collide(w,player);
                 }
                 , null, this);
         });
 
+        if(player.health <= 0){
+            this.camera.fade('#000000');
+            this.camera.onFadeComplete.add(this.fadeComplete,this);
+        }
+
+        game.world.bringToTop(obstacleGroup);
+        game.world.bringToTop(player);
+        game.world.bringToTop(hudGroup);
     },
     render: function () {
         if(this.debug){
@@ -239,6 +291,9 @@ var test_state = {
 
             game.debug.text(game.time.fps, 2, 14, "#a7aebe");
         }
+    }, 
+    fadeComplete: function(){
+            game.state.restart();
     }
 };
 
