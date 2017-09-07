@@ -1,24 +1,26 @@
 var test_state = {
     debug: false,
     playerSpeed: 300,
-    enemyBatSpeed: 200,
-    enemyBatRadius: 500,
     minTargetDistance: 10,
+    minAttackDistance: 40,
     animationSpeed: 7,
     animationProtection: 0,
     playerMoving: false,
-    map: map03,
+    map: map02,
     nrTilesX: 0,
     nrTilesY: 0,
-    liquidGroup: [],
-    isoGroup: [],
-    obstacleGroup: [],
     playerBurning: false,
+    bitmapData : null,
+    bitmapDataBrush : null,
     tileEnum: {
         EMPTY: 0,
         FLOOR01: 1,
         LAVA: 2,
         BORDER: 3
+    },
+    enemyEnum: {
+        EMPTY: 0,
+        BAT: 1
     },
     preload: function() {
         // Load sprite sheet containing all player movements
@@ -38,8 +40,8 @@ var test_state = {
 
 
         // Increase world size
-        this.nrTilesX = this.map.coords[0].length; 
-        this.nrTilesY = this.map.coords.length;  
+        this.nrTilesX = this.map.tiles[0].length; 
+        this.nrTilesY = this.map.tiles.length;  
         var length = this.nrTilesY*tileSize; 
         var width = this.nrTilesX*tileSize; 
         var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
@@ -56,24 +58,29 @@ var test_state = {
         game.stage.backgroundColor = "#000000";
 
         // Create groups
-        floorGroup = game.add.group();
-        obstacleGroup = game.add.group();
+        floorGroup = game.add.group(); // floors
+        enemyGroup = game.add.group(); 
         liquidGroup= game.add.group();
-        isoGroup = game.add.group();
         hudGroup = game.add.group();
         borderGroup = game.add.group();
+        walkingGroup = game.add.group();
+        flyingGroup = game.add.group();
 
+        this.bitmapData = game.make.bitmapData(2000, 1000);
+        this.bitmapData.addToWorld();
+        this.bitmapDataBrush = game.make.bitmapData(32, 32);
+        this.bitmapDataBrush.circle(2, 2, 2, 'rgba(24,234,236,1)');
         // Generate map
-
         for( var y = 1; y < this.nrTilesY - 1; y++) {
             for(var x = 1; x < this.nrTilesX - 1; x++){
-                var tileType = this.map.coords[y][x];
+                // Generate tile
+                var tileType = this.map.tiles[y][x];
                 var tile;
                 if(tileType == this.tileEnum.FLOOR01) {
-                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.coords[y][x] - 1, floorGroup);
+                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.tiles[y][x] - 1, floorGroup);
                     tile.anchor.set(0.5, 1);
                 } else if(tileType == this.tileEnum.LAVA) {
-                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.coords[y][x] - 1, liquidGroup);
+                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.tiles[y][x] - 1, liquidGroup);
                     tile.isoZ += 6;
                     liquidGroup.add(tile);
                     game.physics.isoArcade.enable(tile);
@@ -90,11 +97,40 @@ var test_state = {
                     tile.anchor.set(0.5,1);
                     tile.body.collideWorldBounds = true;
                 }
+
+                //Generate enemy{
+                var enemyType = this.map.enemies[y][x];
+                var enemy;
+                if(enemyType == this.enemyEnum.BAT) {
+                    enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, enemyGroup);
+                    enemy.name = 'EnemyBat';
+                    flyingGroup.add(enemy);
+                    enemyGroup.add(enemy);
+                    enemy.scale.setTo(0.3,0.3);
+                    enemy.anchor.set(0.5, 0.5);
+                    enemy.animations.add('EnemyBatLeft', [0,1,2,3]);
+                    enemy.animations.add('EnemyBatFrontRight', [4,5,6]);
+                    enemy.animations.add('EnemyBatRight', [7,8,9,10]);
+                    enemy.animations.add('EnemyBatFrontLeft', [11,12,13]);
+                    enemy.animations.add('EnemyBatBackRight', [14,15,16]);
+                    enemy.animations.add('EnemyBatBack', [17,18,19,20]);
+                    enemy.animations.add('EnemyBatBackLeft', [21,22,23]);
+                    enemy.animations.add('EnemyBatFront', [24,25,26,27]);
+                    enemy.animations.play('EnemyBatBack', this.animationsSpeed, true);
+                    enemy.maxHealth = 100;
+                    enemy.health = 100;
+                    enemy.radius = 300;
+                    game.physics.isoArcade.enable(enemy);
+                    enemy.body.collideWorldBounds = true;
+                    enemy.minAttackDistance = 25;
+                    enemy.speed =  200;
+                }
             }
         }
 
+
         // Create player
-        player = game.add.isoSprite(this.map.start.x * tileSize,this.map.start.y * tileSize,0, 'PlayerSprite',0, obstacleGroup);
+        player = game.add.isoSprite(this.map.start.x * tileSize,this.map.start.y * tileSize,0, 'PlayerSprite',0);
 
         player.scale.setTo(0.3,0.3);
         player.anchor.set(1,1);
@@ -119,26 +155,8 @@ var test_state = {
         player.animations.play('IdlePlayerFront', 7, true);
         player.maxHealth = 100;
         player.health = 100;
-
-        // Enemy Bat
-        enemyBat= game.add.isoSprite(40 * tileSize,25 * tileSize,0, 'EnemyBatSprite',0, obstacleGroup);
-
-        enemyBat.scale.setTo(0.3,0.3);
-        enemyBat.anchor.set(1,1);
-
-        enemyBat.animations.add('EnemyBatLeft', [0,1,2,3]);
-        enemyBat.animations.add('EnemyBatFrontRight', [4,5,6]);
-        enemyBat.animations.add('EnemyBatRight', [7,8,9,10]);
-        enemyBat.animations.add('EnemyBatFrontLeft', [11,12,13]);
-        enemyBat.animations.add('EnemyBatBackRight', [14,15,16]);
-        enemyBat.animations.add('EnemyBatBack', [17,18,19,20]);
-        enemyBat.animations.add('EnemyBatBackLeft', [21,22,23]);
-        enemyBat.animations.add('EnemyBatFront', [24,25,26,27]);
-
-        enemyBat.animations.play('EnemyBatBack', 7, true);
-        enemyBat.maxHealth = 100;
-        enemyBat.health = 100;
-
+        player.maxEnergy = 100;
+        player.energy = 100;
 
 
         // Create target
@@ -146,9 +164,7 @@ var test_state = {
 
         // Start physics
         game.physics.isoArcade.enable(player);
-        game.physics.isoArcade.enable(enemyBat);
         player.body.collideWorldBounds = true;
-        enemyBat.body.collideWorldBounds = true;
 
         // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
@@ -212,17 +228,13 @@ var test_state = {
             w.alpha = Phaser.Math.clamp(1 + (w.isoZ * 0.1), 0.2, 1);
         });
 
-        // Scale healthbar deping on life
+        // Scale health and energy bar deping on life
         healthBar.width = healthBar.maxWidth*Math.max(player.health, 0)/player.maxHealth;
+        energyBar.width = energyBar.maxWidth*Math.max(player.energy, 0)/player.maxEnergy;
 
         // Get angle between pointer and player
-        game.iso.topologicalSort(isoGroup)
         var playerToTargetAngle = Math.atan2(target.y - player.body.y, target.x - player.body.x);
-        var enemyBatToPlayerAngle = Math.atan2(player.body.y - enemyBat.body.y, player.body.x - enemyBat.body.x);
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
-
-        // Correct for isometric plane
-        var angleCorrection = -Math.PI/4;
 
         if(game.input.activePointer.isDown){
             game.iso.unproject(game.input.activePointer.position, target);
@@ -230,7 +242,6 @@ var test_state = {
         }
         if(this.playerMoving) {
             var distancePlayerTarget = Math.sqrt(Math.pow(target.x - player.body.x, 2)+ Math.pow(target.y - player.body.y, 2));
-            //var distancePlayerTarget = game.physics.isoArcade.distanceBetween(player, target);
             if(distancePlayerTarget <= this.minTargetDistance){
                 this.playerMoving = false;
                 player.body.velocity.x = 0;
@@ -243,19 +254,46 @@ var test_state = {
             }
         }
 
+        // Clear radius drawing
+        this.bitmapData.clear();
+
         // Update bat, expand for containers with enemies
-        var distanceEnemyBatToPlayer = Math.sqrt(Math.pow(enemyBat.body.x - player.body.x, 2) +Math.pow(enemyBat.body.x - player.body.x, 2));
-        enemyBat.animations.play('EnemyBat' + getAnimationDirection(enemyBatToPlayerAngle), this.animationSpeed, true);
-        if(distanceEnemyBatToPlayer > this.enemyBatRadius || distanceEnemyBatToPlayer < this.minTargetDistance) {
-            enemyBat.body.velocity.x = 0;
-            enemyBat.body.velocity.y = 0;
-            if(distanceEnemyBatToPlayer <= this.minTargetDistance) {
-                player.health -= 2;
-                enemyBat.animations.currentAnim.speed = this.animationSpeed * 10;
+        var distanceEnemyToPlayer;
+        var enemyToPlayerAngle;
+        var graphics = [];
+        for( var i = 0; i < enemyGroup.length; i++) {
+            var e = enemyGroup.getAt(i);
+            distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - player.body.x, 2) +Math.pow(e.body.y - player.body.y, 2));
+
+            enemyToPlayerAngle = Math.atan2(player.body.y - e.body.y, player.body.x - e.body.x);
+            e.animations.play(e.name + getAnimationDirection(enemyToPlayerAngle), this.animationSpeed, true);
+
+            if(distanceEnemyToPlayer > e.radius || distanceEnemyToPlayer < e.minAttackDistance) {
+                e.body.velocity.x = 0;
+                e.body.velocity.y = 0;
+                if(distanceEnemyToPlayer <= e.minAttackDistance) {
+                    player.health -= 2;
+                    e.animations.currentAnim.speed = this.animationSpeed * 10;
+                }
+            } else {
+                e.body.velocity.x = Math.cos(enemyToPlayerAngle) * e.speed;
+                e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;
             }
-        } else {
-            enemyBat.body.velocity.x = Math.cos(enemyBatToPlayerAngle) * this.enemyBatSpeed;
-            enemyBat.body.velocity.y = Math.sin(enemyBatToPlayerAngle) * this.enemyBatSpeed;
+
+            // Equation of circle to draw vision radius
+            var radius = e.radius;
+            var theta = 0;  // angle that will be increased each loop
+            var h = e.body.x; // x coordinate of circle center
+            var k = e.body.y; // y coordinate of circle center
+            var step = 15;  // amount to add to theta each time (degrees)
+            while(theta < 360)
+            { 
+                var xx = h + radius*Math.cos(theta);
+                var yy = k + radius*Math.sin(theta);
+                var out = game.iso.project({x: xx, y: yy, z: 0});
+                this.bitmapData.draw(this.bitmapDataBrush, out.x, out.y);
+                theta += step;
+            }
         }
 
         // Check for border collision
@@ -270,30 +308,28 @@ var test_state = {
                 , null, this);
         });
 
+        // Die
         if(player.health <= 0){
             this.camera.fade('#000000');
             this.camera.onFadeComplete.add(this.fadeComplete,this);
         }
 
-        game.world.bringToTop(obstacleGroup);
+        game.world.bringToTop(enemyGroup);
         game.world.bringToTop(player);
         game.world.bringToTop(hudGroup);
+        game.world.bringToTop(this.bitmapData);
     },
     render: function () {
         if(this.debug){
-            floorGroup.forEach(function(tile) {
-                game.debug.body(tile, 'rgba(189, 221, 235, 0.6)', false);
-            });
             game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
             borderGroup.forEach(function(tile){
                 game.debug.body(tile, 'rgba(189, 221, 235, 0.6)', false);
             });
-
-            game.debug.text(game.time.fps, 2, 14, "#a7aebe");
         }
+        game.debug.text(game.time.fps, 2, 14, "#a7aebe");
     }, 
     fadeComplete: function(){
-            game.state.restart();
+        game.state.restart();
     }
 };
 
@@ -325,5 +361,21 @@ function getAnimationDirection(angle) {
  * Return type of tile 
  */
 function getTile(x, y, map) {
-    return map.coords[Math.ceil(y/tileSize - 0.5)+1][Math.ceil(x /tileSize  - 0.5)+1];
+    return map.tiles[Math.ceil(y/tileSize - 0.5)+1][Math.ceil(x /tileSize  - 0.5)+1];
+}
+
+function getX(x) {
+    return Math.ceil(x /tileSize  - 0.5)+1;
+}
+function getY(y) {
+    return Math.ceil(y/tileSize - 0.5)+1;
+}
+function toX(x, y) {
+    var res  = ((2 * y + x) / 2);
+    return res;
+}
+
+function toY(x,y){
+    var res = ((2 * y - x) / 2);
+    return res;
 }
