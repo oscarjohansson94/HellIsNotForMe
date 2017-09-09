@@ -1,13 +1,8 @@
 var test_state = {
-    debug: false,
     minTargetDistance: 10,
-    animationSpeed: 7,
-    animationProtection: 0,
-    playerMoving: false,
     map: map02,
     nrTilesX: 0,
     nrTilesY: 0,
-    playerBurning: false,
     bitmapData : null,
     bitmapDataBrush : null,
     keyQ: null,
@@ -19,16 +14,7 @@ var test_state = {
     showRadius: false,
     Shield: null,
     radiusStart: 0,
-    tileEnum: {
-        EMPTY: 0,
-        FLOOR01: 1,
-        LAVA: 2,
-        BORDER: 3
-    },
-    enemyEnum: {
-        EMPTY: 0,
-        BAT: 1
-    },
+
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
@@ -96,96 +82,46 @@ var test_state = {
                 // Generate tile
                 var tileType = this.map.tiles[y][x];
                 var tile;
-                if(tileType == this.tileEnum.FLOOR01) {
+                if(tileType == tileEnum.FLOOR01) {
                     tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.tiles[y][x] - 1, floorGroup);
-                    tile.anchor.set(0.5, 1);
-                } else if(tileType == this.tileEnum.LAVA) {
+                } else if(tileType == tileEnum.LAVA) {
                     tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.tiles[y][x] - 1, liquidGroup);
                     tile.isoZ += 6;
                     liquidGroup.add(tile);
                     game.physics.isoArcade.enable(tile);
                     tile.body.collideWorldBounds = true;
                     tile.body.immovable = true;
-                    tile.anchor.set(0.5, 1);
-                } else if(tileType == this.tileEnum.BORDER){
+                } else if(tileType == tileEnum.BORDER){
                     tile = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,null, 0, borderGroup);
                     tile.enableBody = true;
                     tile.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
                     game.physics.isoArcade.enable(tile);
                     tile.body.setSize(tileSize,tileSize+1,tileSize+1, 0 ,0, 0);
                     tile.body.immovable = true;
-                    tile.anchor.set(0.5,1);
                     tile.body.collideWorldBounds = true;
                 }
+                tile.anchor.set(0.5,1);
 
                 //Generate enemy{
                 var enemyType = this.map.enemies[y][x];
                 var enemy;
-                if(enemyType == this.enemyEnum.BAT) {
+                if(enemyType == enemyEnum.BAT) {
                     enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, enemyGroup);
-                    enemy.name = 'EnemyBat';
+                    createBat(enemy);
                     flyingGroup.add(enemy);
                     enemyGroup.add(enemy);
-                    enemy.scale.setTo(0.3,0.3);
-                    enemy.anchor.set(0.5, 0.5);
-                    enemy.animations.add('EnemyBatLeft', [0,1,2,3]);
-                    enemy.animations.add('EnemyBatFrontRight', [4,5,6]);
-                    enemy.animations.add('EnemyBatRight', [7,8,9,10]);
-                    enemy.animations.add('EnemyBatFrontLeft', [11,12,13]);
-                    enemy.animations.add('EnemyBatBackRight', [14,15,16]);
-                    enemy.animations.add('EnemyBatBack', [17,18,19,20]);
-                    enemy.animations.add('EnemyBatBackLeft', [21,22,23]);
-                    enemy.animations.add('EnemyBatFront', [24,25,26,27]);
-                    enemy.animations.play('EnemyBatBack', this.animationsSpeed, true);
-                    enemy.maxHealth = 100;
-                    enemy.health = 100;
-                    enemy.radius = 300;
-                    game.physics.isoArcade.enable(enemy);
-                    enemy.body.collideWorldBounds = true;
-                    enemy.minAttackDistance = 25;
-                    enemy.speed =  200;
                 }
             }
         }
 
 
+
         // Create player
         player = game.add.isoSprite(this.map.start.x * tileSize,this.map.start.y * tileSize,0, 'PlayerSprite',0);
-
-        player.scale.setTo(0.3,0.3);
-        player.anchor.set(1,1);
-
-        player.animations.add('IdlePlayerRight', [0,1,2,3]);
-        player.animations.add('IdlePlayerLeft', [24,25,26,27]);
-        player.animations.add('IdlePlayerBackLeft', [36,37,38,39]);
-        player.animations.add('IdlePlayerFrontRight', [32,33,34,35]);
-        player.animations.add('IdlePlayerFrontLeft', [44,45,46,47]);
-        player.animations.add('IdlePlayerBackRight', [48,49,50,51]);
-        player.animations.add('IdlePlayerFront', [57,58,59,60,61]);
-        player.animations.add('IdlePlayerBack', [62,63,63,64,65]);
-        player.animations.add('RunPlayerFrontLeft', [4,5,6,7]);
-        player.animations.add('RunPlayerFrontRight', [8,9,10,11]);
-        player.animations.add('RunPlayerBackRight', [12,13,14,15]);
-        player.animations.add('RunPlayerFront', [16,17,18,19]);
-        player.animations.add('RunPlayerBackLeft', [20,21,22,23]);
-        player.animations.add('RunPlayerRight', [28,29,30,31]);
-        player.animations.add('RunPlayerLeft', [40,41,42,43]);
-        player.animations.add('RunPlayerBack', [52,53,54,55,56]);
-
-        player.animations.play('IdlePlayerFront', 7, true);
-        player.maxHealth = 100;
-        player.health = 100;
-        player.maxEnergy = 100;
-        player.energy = 100;
-        player.speed = 300;
-        player.shield = false;
+        createPlayer(player);
 
         // Create target
         target = new Phaser.Plugin.Isometric.Point3();
-
-        // Start physics
-        game.physics.isoArcade.enable(player);
-        player.body.collideWorldBounds = true;
 
         // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
@@ -241,6 +177,7 @@ var test_state = {
         hudGroup.add(this.WButton);
         hudGroup.add(this.WButtonPressed);
 
+
         // EnergyShield
         this.Shield = game.add.isoSprite(0, 0,0,'Shield',0);
         this.Shield.visible = false;
@@ -252,7 +189,9 @@ var test_state = {
     },
     update: function() {
 
-        if(this.playerBurning){
+
+        // TODO needs to handle player health regeneration better
+        if(player.burning){
             fire.body.x = player.body.x;
             fire.body.y = player.body.y;
             player.health--;
@@ -261,8 +200,8 @@ var test_state = {
         }
 
 
-        if(!this.Shield.visible && !this.playerBurning && getTile(player.body.x, player.body.y, this.map) == this.tileEnum.LAVA){
-            this.playerBurning = true;
+        if(!this.Shield.visible && !player.burning && getTile(player.body.x, player.body.y, this.map) == tileEnum.LAVA){
+            player.burning = true;
             fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
             fire.scale.setTo(0.4, 0.4);
             fire.anchor.set(1,1);
@@ -270,11 +209,10 @@ var test_state = {
             fire.animations.play('fire',15, true);
             game.physics.isoArcade.enable(fire);
             fire.body.collideWorldBounds = true;
-        } else if((this.playerBurning && getTile(player.body.x, player.body.y, this.map) != this.tileEnum.LAVA) 
-            || (this.Shield.visible && this.playerBurning)){
+        } else if((player.burning && getTile(player.body.x, player.body.y, this.map) != tileEnum.LAVA) 
+            || (this.Shield.visible && player.burning)){
             fire.destroy();
-            this.playerBurning = false;
-            console.log(0);
+            player.burning = false;
         }
 
 
@@ -294,17 +232,17 @@ var test_state = {
 
         if(game.input.activePointer.isDown){
             game.iso.unproject(game.input.activePointer.position, target);
-            this.playerMoving = true;
+            player.moving = true;
         }
-        if(this.playerMoving) {
+        if(player.moving) {
             var distancePlayerTarget = Math.sqrt(Math.pow(target.x - player.body.x, 2)+ Math.pow(target.y - player.body.y, 2));
             if(distancePlayerTarget <= this.minTargetDistance){
-                this.playerMoving = false;
+                player.moving = false;
                 player.body.velocity.x = 0;
                 player.body.velocity.y = 0;
-                player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), this.animationSpeed, true);
+                player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), animationSpeed, true);
             } else { 
-                player.animations.play('RunPlayer' + getAnimationDirection(playerToTargetAngle), this.animationSpeed, true);
+                player.animations.play('RunPlayer' + getAnimationDirection(playerToTargetAngle), animationSpeed, true);
                 player.body.velocity.x = Math.cos(playerToTargetAngle) * player.speed;
                 player.body.velocity.y = Math.sin(playerToTargetAngle) * player.speed;
             }
@@ -319,7 +257,7 @@ var test_state = {
             if(player.energy <= 0){
                 this.QbuttonUp();
             }
-                
+
         } else if(player.energy < player.maxEnergy) {
             player.energy++;
         }
@@ -333,14 +271,14 @@ var test_state = {
             distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - player.body.x, 2) +Math.pow(e.body.y - player.body.y, 2));
 
             enemyToPlayerAngle = Math.atan2(player.body.y - e.body.y, player.body.x - e.body.x);
-            e.animations.play(e.name + getAnimationDirection(enemyToPlayerAngle), this.animationSpeed, true);
+            e.animations.play(e.name + getAnimationDirection(enemyToPlayerAngle), animationSpeed, true);
 
             if(distanceEnemyToPlayer > e.radius || distanceEnemyToPlayer < e.minAttackDistance) {
                 e.body.velocity.x = 0;
                 e.body.velocity.y = 0;
                 if(distanceEnemyToPlayer <= e.minAttackDistance) {
                     player.health -= 2;
-                    e.animations.currentAnim.speed = this.animationSpeed * 10;
+                    e.animations.currentAnim.speed = animationSpeed * 10;
                 }
             } else {
                 e.body.velocity.x = Math.cos(enemyToPlayerAngle) * e.speed;
@@ -380,7 +318,7 @@ var test_state = {
                 function() {
                     player.body.velocity.x = 0;
                     player.body.velocity.y = 0;
-                    player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), this.animationSpeed, true);
+                    player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), animationSpeed, true);
                     game.physics.isoArcade.collide(w,player);
                 }
                 , null, this);
@@ -395,11 +333,10 @@ var test_state = {
         game.world.bringToTop(enemyGroup);
         game.world.bringToTop(player);
         game.world.bringToTop(hudGroup);
-//        game.world.bringToTop(this.QButton);
         game.world.bringToTop(abilityGroup);
     },
     render: function () {
-        if(this.debug){
+        if(debug){
             game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
             borderGroup.forEach(function(tile){
                 game.debug.body(tile, 'rgba(189, 221, 235, 0.6)', false);
@@ -470,20 +407,4 @@ function getAnimationDirection(angle) {
  */
 function getTile(x, y, map) {
     return map.tiles[Math.ceil(y/tileSize - 0.5)+1][Math.ceil(x /tileSize  - 0.5)+1];
-}
-
-function getX(x) {
-    return Math.ceil(x /tileSize  - 0.5)+1;
-}
-function getY(y) {
-    return Math.ceil(y/tileSize - 0.5)+1;
-}
-function toX(x, y) {
-    var res  = ((2 * y + x) / 2);
-    return res;
-}
-
-function toY(x,y){
-    var res = ((2 * y - x) / 2);
-    return res;
 }
