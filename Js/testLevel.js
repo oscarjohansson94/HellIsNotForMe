@@ -1,8 +1,6 @@
 var test_state = {
     debug: false,
-    playerSpeed: 300,
     minTargetDistance: 10,
-    minAttackDistance: 40,
     animationSpeed: 7,
     animationProtection: 0,
     playerMoving: false,
@@ -12,6 +10,15 @@ var test_state = {
     playerBurning: false,
     bitmapData : null,
     bitmapDataBrush : null,
+    keyQ: null,
+    keyW: null,
+    QButton: null,
+    QButtonPressed: null,
+    WButton: null,
+    WButtonPressed: null,
+    showRadius: false,
+    Shield: null,
+    radiusStart: 0,
     tileEnum: {
         EMPTY: 0,
         FLOOR01: 1,
@@ -30,6 +37,11 @@ var test_state = {
         this.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
         this.load.image('EnergyBar', '../Res/Images/SpriteSheet/energyBar.png');
         this.load.image('Hud', '../Res/Images/SpriteSheet/Hud.png');
+        this.load.image('QButton', '../Res/Images/SpriteSheet/QButton.png');
+        this.load.image('QButtonPressed', '../Res/Images/SpriteSheet/QButtonPressed.png');
+        this.load.image('WButton', '../Res/Images/SpriteSheet/WButton.png');
+        this.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
+        this.load.image('Shield', '../Res/Images/SpriteSheet/shield.png');
 
         // Load map tiles
         game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
@@ -37,7 +49,6 @@ var test_state = {
         game.time.advancedTiming = true;
         game.plugins.add(new Phaser.Plugin.Isometric(game));
         game.iso.anchor.set(0.5, 0);
-
 
         // Increase world size
         this.nrTilesX = this.map.tiles[0].length; 
@@ -57,6 +68,14 @@ var test_state = {
         // Set background color
         game.stage.backgroundColor = "#000000";
 
+        this.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
+        this.keyQ.onDown.add(this.QbuttonDown,this);
+        this.keyQ.onUp.add(this.QbuttonUp,this);
+
+        this.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
+        this.keyW.onDown.add(this.WbuttonDown,this);
+        this.keyW.onUp.add(this.WbuttonUp,this);
+
         // Create groups
         floorGroup = game.add.group(); // floors
         enemyGroup = game.add.group(); 
@@ -65,6 +84,7 @@ var test_state = {
         borderGroup = game.add.group();
         walkingGroup = game.add.group();
         flyingGroup = game.add.group();
+        abilityGroup = game.add.group();
 
         this.bitmapData = game.make.bitmapData(2000, 1000);
         this.bitmapData.addToWorld();
@@ -157,7 +177,8 @@ var test_state = {
         player.health = 100;
         player.maxEnergy = 100;
         player.energy = 100;
-
+        player.speed = 300;
+        player.shield = false;
 
         // Create target
         target = new Phaser.Plugin.Isometric.Point3();
@@ -195,6 +216,39 @@ var test_state = {
         energyBar.cropEnabled = true;
         energyBar.scale.setTo(scale, scale);
         energyBar.maxWidth = energyBar.width;
+
+        // Buttons
+        this.QButton = game.add.image(22*scale, game.height - 109*scale, 'QButton');
+        this.QButton.fixedToCamera = true;
+        this.QButton.cropEnabled = true;
+        this.QButton.scale.setTo(scale, scale);
+        this.QButtonPressed = game.add.image(22*scale, game.height - 109*scale, 'QButtonPressed');
+        this.QButtonPressed.fixedToCamera = true;
+        this.QButtonPressed.cropEnabled = true;
+        this.QButtonPressed.scale.setTo(scale, scale);
+        this.QButtonPressed.visible = false;
+        hudGroup.add(this.QButton);
+        hudGroup.add(this.QButtonPressed);
+        this.WButton = game.add.image(140*scale, game.height - 109*scale, 'WButton');
+        this.WButton.fixedToCamera = true;
+        this.WButton.cropEnabled = true;
+        this.WButton.scale.setTo(scale, scale);
+        this.WButtonPressed = game.add.image(140*scale, game.height - 109*scale, 'WButtonPressed');
+        this.WButtonPressed.fixedToCamera = true;
+        this.WButtonPressed.cropEnabled = true;
+        this.WButtonPressed.scale.setTo(scale, scale);
+        this.WButtonPressed.visible = false;
+        hudGroup.add(this.WButton);
+        hudGroup.add(this.WButtonPressed);
+
+        // EnergyShield
+        this.Shield = game.add.isoSprite(0, 0,0,'Shield',0);
+        this.Shield.visible = false;
+        this.Shield.fixedToCamera = true;
+        game.physics.isoArcade.enable(this.Shield);
+        this.Shield.collideWorldBounds = true;
+        this.Shield.scale.setTo(0.2, 0.2);
+        abilityGroup.add(this.Shield);
     },
     update: function() {
 
@@ -207,7 +261,7 @@ var test_state = {
         }
 
 
-        if(!this.playerBurning && getTile(player.body.x, player.body.y, this.map) == this.tileEnum.LAVA){
+        if(!this.Shield.visible && !this.playerBurning && getTile(player.body.x, player.body.y, this.map) == this.tileEnum.LAVA){
             this.playerBurning = true;
             fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
             fire.scale.setTo(0.4, 0.4);
@@ -216,9 +270,11 @@ var test_state = {
             fire.animations.play('fire',15, true);
             game.physics.isoArcade.enable(fire);
             fire.body.collideWorldBounds = true;
-        } else if(this.playerBurning && getTile(player.body.x, player.body.y, this.map) != this.tileEnum.LAVA){
+        } else if((this.playerBurning && getTile(player.body.x, player.body.y, this.map) != this.tileEnum.LAVA) 
+            || (this.Shield.visible && this.playerBurning)){
             fire.destroy();
             this.playerBurning = false;
+            console.log(0);
         }
 
 
@@ -249,13 +305,24 @@ var test_state = {
                 player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), this.animationSpeed, true);
             } else { 
                 player.animations.play('RunPlayer' + getAnimationDirection(playerToTargetAngle), this.animationSpeed, true);
-                player.body.velocity.x = Math.cos(playerToTargetAngle) * this.playerSpeed;
-                player.body.velocity.y = Math.sin(playerToTargetAngle) * this.playerSpeed;
+                player.body.velocity.x = Math.cos(playerToTargetAngle) * player.speed;
+                player.body.velocity.y = Math.sin(playerToTargetAngle) * player.speed;
             }
         }
 
         // Clear radius drawing
         this.bitmapData.clear();
+
+        // Drain energy
+        if(this.showRadius) {
+            player.energy -= 0.1;
+            if(player.energy <= 0){
+                this.QbuttonUp();
+            }
+                
+        } else if(player.energy < player.maxEnergy) {
+            player.energy++;
+        }
 
         // Update bat, expand for containers with enemies
         var distanceEnemyToPlayer;
@@ -280,19 +347,30 @@ var test_state = {
                 e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;
             }
 
+            if(this.Shield.visible) {
+                this.Shield.body.x = player.body.x+ 7;
+                this.Shield.body.y = player.body.y + 10;
+                this.Shield.body.z = player.body.z;
+            }
+
             // Equation of circle to draw vision radius
-            var radius = e.radius;
-            var theta = 0;  // angle that will be increased each loop
-            var h = e.body.x; // x coordinate of circle center
-            var k = e.body.y; // y coordinate of circle center
-            var step = 15;  // amount to add to theta each time (degrees)
-            while(theta < 360)
-            { 
-                var xx = h + radius*Math.cos(theta);
-                var yy = k + radius*Math.sin(theta);
-                var out = game.iso.project({x: xx, y: yy, z: 0});
-                this.bitmapData.draw(this.bitmapDataBrush, out.x, out.y);
-                theta += step;
+            if(this.showRadius) {
+                var radius = e.radius;
+                var theta = this.radiusStart;  // angle that will be increased each loop
+                var h = e.body.x; // x coordinate of circle center
+                var k = e.body.y; // y coordinate of circle center
+                var step = 15;  // amount to add to theta each time (degrees)
+                while(theta < this.radiusStart + 360)
+                { 
+                    var xx = h + radius*Math.cos(theta);
+                    var yy = k + radius*Math.sin(theta);
+                    var out = game.iso.project({x: xx, y: yy, z: 0});
+                    this.bitmapData.draw(this.bitmapDataBrush, out.x, out.y);
+                    theta += step;
+                }
+
+                this.radiusStart += 0.0008;
+                this.radiusStart %= 360;
             }
         }
 
@@ -317,7 +395,8 @@ var test_state = {
         game.world.bringToTop(enemyGroup);
         game.world.bringToTop(player);
         game.world.bringToTop(hudGroup);
-        game.world.bringToTop(this.bitmapData);
+//        game.world.bringToTop(this.QButton);
+        game.world.bringToTop(abilityGroup);
     },
     render: function () {
         if(this.debug){
@@ -330,7 +409,36 @@ var test_state = {
     }, 
     fadeComplete: function(){
         game.state.restart();
+    },
+    QbuttonDown: function(){ 
+        if(this.QButton != null && this.QButtonPressed != null){
+            this.showRadius = true;
+            this.QButton.visible = false;
+            this.QButtonPressed.visible = true;
+        }
+    },
+    QbuttonUp: function() {
+        if(this.QButton != null && this.QButtonPressed != null){
+            this.showRadius = false;
+            this.QButton.visible = true;
+            this.QButtonPressed.visible = false;
+        }
+    },    
+    WbuttonDown: function(){ 
+        if(this.WButton != null && this.WButtonPressed != null){
+            this.Shield.visible = true;
+            this.WButton.visible = false;
+            this.WButtonPressed.visible = true;
+        }
+    },
+    WbuttonUp: function() {
+        if(this.WButton != null && this.WButtonPressed != null){
+            this.WButton.visible = true;
+            this.WButtonPressed.visible = false;
+            this.Shield.visible = false;
+        }
     }
+
 };
 
 /*
