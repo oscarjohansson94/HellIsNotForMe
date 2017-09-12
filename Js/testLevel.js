@@ -1,5 +1,4 @@
 var test_state = {
-    minTargetDistance: 10,
     map: map02,
     nrTilesX: 0,
     nrTilesY: 0,
@@ -12,8 +11,6 @@ var test_state = {
     WButton: null,
     WButtonPressed: null,
     showRadius: false,
-    Shield: null,
-    radiusStart: 0,
 
     preload: function() {
         // Load sprite sheet containing all player movements
@@ -28,6 +25,7 @@ var test_state = {
         this.load.image('WButton', '../Res/Images/SpriteSheet/WButton.png');
         this.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
         this.load.image('Shield', '../Res/Images/SpriteSheet/shield.png');
+        this.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
 
         // Load map tiles
         game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
@@ -63,7 +61,7 @@ var test_state = {
         this.keyW.onUp.add(this.WbuttonUp,this);
 
         // Create groups
-        floorGroup = game.add.group(); // floors
+        floorGroup = game.add.group();
         enemyGroup = game.add.group(); 
         liquidGroup= game.add.group();
         hudGroup = game.add.group();
@@ -72,10 +70,11 @@ var test_state = {
         flyingGroup = game.add.group();
         abilityGroup = game.add.group();
 
-        this.bitmapData = game.make.bitmapData(2000, 1000);
+        this.bitmapData = game.make.bitmapData(3000, 3000);
         this.bitmapData.addToWorld();
         this.bitmapDataBrush = game.make.bitmapData(32, 32);
         this.bitmapDataBrush.circle(2, 2, 2, 'rgba(24,234,236,1)');
+
         // Generate map
         for( var y = 1; y < this.nrTilesY - 1; y++) {
             for(var x = 1; x < this.nrTilesX - 1; x++){
@@ -84,12 +83,14 @@ var test_state = {
                 var tile;
                 if(tileType == tileEnum.FLOOR01) {
                     tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.tiles[y][x] - 1, floorGroup);
+                    tile.anchor.set(0.5,1);
                 } else if(tileType == tileEnum.LAVA) {
                     tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.tiles[y][x] - 1, liquidGroup);
                     tile.isoZ += 6;
                     liquidGroup.add(tile);
                     game.physics.isoArcade.enable(tile);
                     tile.body.collideWorldBounds = true;
+                    tile.anchor.set(0.5,1);
                     tile.body.immovable = true;
                 } else if(tileType == tileEnum.BORDER){
                     tile = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,null, 0, borderGroup);
@@ -99,29 +100,35 @@ var test_state = {
                     tile.body.setSize(tileSize,tileSize+1,tileSize+1, 0 ,0, 0);
                     tile.body.immovable = true;
                     tile.body.collideWorldBounds = true;
+                    tile.anchor.set(0.5,1);
+                } else {
+                    // EMPTY TILE
                 }
-                tile.anchor.set(0.5,1);
 
                 //Generate enemy{
                 var enemyType = this.map.enemies[y][x];
                 var enemy;
                 if(enemyType == enemyEnum.BAT) {
                     enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, enemyGroup);
+                    enemy.radiusStart = 0;
                     createBat(enemy);
                     flyingGroup.add(enemy);
                     enemyGroup.add(enemy);
                 }
+                else if(enemyType == enemyEnum.STAIR) {
+                    console.log("creating stair");
+                    enemy = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,'Stair', 0, borderGroup);
+                    enemy.scale.setTo(0.4, 0.4);
+                }
             }
         }
-
-
 
         // Create player
         player = game.add.isoSprite(this.map.start.x * tileSize,this.map.start.y * tileSize,0, 'PlayerSprite',0);
         createPlayer(player);
 
         // Create target
-        target = new Phaser.Plugin.Isometric.Point3();
+        player.target = new Phaser.Plugin.Isometric.Point3();
 
         // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
@@ -179,39 +186,32 @@ var test_state = {
 
 
         // EnergyShield
-        this.Shield = game.add.isoSprite(0, 0,0,'Shield',0);
-        this.Shield.visible = false;
-        this.Shield.fixedToCamera = true;
-        game.physics.isoArcade.enable(this.Shield);
-        this.Shield.collideWorldBounds = true;
-        this.Shield.scale.setTo(0.2, 0.2);
-        abilityGroup.add(this.Shield);
+        player.Shield = game.add.isoSprite(0, 0,0,'Shield',0);
+        player.Shield.visible = false;
+        player.Shield.fixedToCamera = true;
+        game.physics.isoArcade.enable(player.Shield);
+        player.Shield.collideWorldBounds = true;
+        player.Shield.scale.setTo(0.2, 0.2);
+        abilityGroup.add(player.Shield);
     },
     update: function() {
 
-
         // TODO needs to handle player health regeneration better
         if(player.burning){
-            fire.body.x = player.body.x;
-            fire.body.y = player.body.y;
+            player.fire.body.x = player.body.x;
+            player.fire.body.y = player.body.y;
             player.health--;
         } else if(player.health < 100) {
             player.health++;
         }
 
-
-        if(!this.Shield.visible && !player.burning && getTile(player.body.x, player.body.y, this.map) == tileEnum.LAVA){
+        if(!player.Shield.visible && !player.burning && getTile(player.body.x, player.body.y, this.map) == tileEnum.LAVA){
             player.burning = true;
-            fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
-            fire.scale.setTo(0.4, 0.4);
-            fire.anchor.set(1,1);
-            fire.animations.add('fire', [0,1,2,3]);
-            fire.animations.play('fire',15, true);
-            game.physics.isoArcade.enable(fire);
-            fire.body.collideWorldBounds = true;
+            player.fire = createFire(player.body.x, player.body.y);
+
         } else if((player.burning && getTile(player.body.x, player.body.y, this.map) != tileEnum.LAVA) 
-            || (this.Shield.visible && player.burning)){
-            fire.destroy();
+            || (player.Shield.visible && player.burning)){
+            player.fire.destroy();
             player.burning = false;
         }
 
@@ -227,16 +227,16 @@ var test_state = {
         energyBar.width = energyBar.maxWidth*Math.max(player.energy, 0)/player.maxEnergy;
 
         // Get angle between pointer and player
-        var playerToTargetAngle = Math.atan2(target.y - player.body.y, target.x - player.body.x);
+        var playerToTargetAngle = Math.atan2(player.target.y - player.body.y, player.target.x - player.body.x);
         var pointerDistance = game.physics.arcade.distanceToPointer(player);
 
         if(game.input.activePointer.isDown){
-            game.iso.unproject(game.input.activePointer.position, target);
+            game.iso.unproject(game.input.activePointer.position, player.target);
             player.moving = true;
         }
         if(player.moving) {
-            var distancePlayerTarget = Math.sqrt(Math.pow(target.x - player.body.x, 2)+ Math.pow(target.y - player.body.y, 2));
-            if(distancePlayerTarget <= this.minTargetDistance){
+            var distancePlayerTarget = Math.sqrt(Math.pow(player.target.x - player.body.x, 2)+ Math.pow(player.target.y - player.body.y, 2));
+            if(distancePlayerTarget <= player.minTargetDistance){
                 player.moving = false;
                 player.body.velocity.x = 0;
                 player.body.velocity.y = 0;
@@ -285,20 +285,20 @@ var test_state = {
                 e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;
             }
 
-            if(this.Shield.visible) {
-                this.Shield.body.x = player.body.x+ 7;
-                this.Shield.body.y = player.body.y + 10;
-                this.Shield.body.z = player.body.z;
+            if(player.Shield.visible) {
+                player.Shield.body.x = player.body.x+ 7;
+                player.Shield.body.y = player.body.y + 10;
+                player.Shield.body.z = player.body.z;
             }
 
             // Equation of circle to draw vision radius
             if(this.showRadius) {
                 var radius = e.radius;
-                var theta = this.radiusStart;  // angle that will be increased each loop
+                var theta = e.radiusStart;  // angle that will be increased each loop
                 var h = e.body.x; // x coordinate of circle center
                 var k = e.body.y; // y coordinate of circle center
                 var step = 15;  // amount to add to theta each time (degrees)
-                while(theta < this.radiusStart + 360)
+                while(theta < e.radiusStart + 360)
                 { 
                     var xx = h + radius*Math.cos(theta);
                     var yy = k + radius*Math.sin(theta);
@@ -307,8 +307,8 @@ var test_state = {
                     theta += step;
                 }
 
-                this.radiusStart += 0.0008;
-                this.radiusStart %= 360;
+                e.radiusStart += 0.005;
+                e.radiusStart %= 360;
             }
         }
 
@@ -363,7 +363,7 @@ var test_state = {
     },    
     WbuttonDown: function(){ 
         if(this.WButton != null && this.WButtonPressed != null){
-            this.Shield.visible = true;
+            player.Shield.visible = true;
             this.WButton.visible = false;
             this.WButtonPressed.visible = true;
         }
@@ -372,39 +372,10 @@ var test_state = {
         if(this.WButton != null && this.WButtonPressed != null){
             this.WButton.visible = true;
             this.WButtonPressed.visible = false;
-            this.Shield.visible = false;
+            player.Shield.visible = false;
         }
     }
 
 };
 
-/*
- * Get the right animation suffix depinding on angle
- */
-function getAnimationDirection(angle) {
-    var pi = Math.PI;
-    if(angle >= -pi/8 && angle <= pi/8){
-        return 'Right';
-    } else if(angle >= pi/8 && angle <= 3*pi/8)  {
-        return 'FrontRight';
-    } else if(angle >= 3*pi/8 && angle <= 5*pi/8) {
-        return 'Front';
-    } else if(angle >= 5*pi/8 &&  angle <= 7*pi/8) {
-        return 'FrontLeft';
-    } else if((angle >= 7*pi/8 && angle <= 2*pi) || (angle <= -7*pi/8 && angle >= -2*pi)) {
-        return 'Left';
-    } else if(angle >= -7*pi/8 && angle <= -5*pi/8) {
-        return 'BackLeft';
-    } else if(angle >= -5*pi/8 && angle <= -3*pi/8) {
-        return 'Back';
-    } else if(angle >= -3*pi/8 && angle <= -pi/8) {
-        return 'BackRight';
-    }
-}
 
-/* 
- * Return type of tile 
- */
-function getTile(x, y, map) {
-    return map.tiles[Math.ceil(y/tileSize - 0.5)+1][Math.ceil(x /tileSize  - 0.5)+1];
-}

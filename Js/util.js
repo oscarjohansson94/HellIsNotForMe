@@ -1,3 +1,6 @@
+animationSpeed = 7;
+debug = false;
+
 tileEnum = {
     EMPTY: 0,
     FLOOR01: 1,
@@ -7,9 +10,14 @@ tileEnum = {
 
 enemyEnum = {
     EMPTY: 0,
-    BAT: 1
+    BAT: 1,
+    STAIR: 2
 }
 
+/*
+ * Create the player
+ * void
+ */
 function createPlayer(player) {
 
     player.scale.setTo(0.3,0.3);
@@ -40,15 +48,20 @@ function createPlayer(player) {
     player.speed = 300;
     player.shield = false;
     player.burning = false;
+    player.fire = null;
+    player.minTargetDistance = 10;
+    player.target =  null;
 
     game.physics.isoArcade.enable(player);
     player.body.collideWorldBounds = true;
 }
 
+/* 
+ * Create enemy of type BAT
+ * void
+ */
 function createBat(enemy) {
     enemy.name = 'EnemyBat';
-    flyingGroup.add(enemy);
-    enemyGroup.add(enemy);
     enemy.scale.setTo(0.3,0.3);
     enemy.anchor.set(0.5, 0.5);
     enemy.animations.add('EnemyBatLeft', [0,1,2,3]);
@@ -70,9 +83,53 @@ function createBat(enemy) {
 }
 
 
+/*
+ * Get the right animation suffix depinding on angle
+ * string
+ */
+function getAnimationDirection(angle) {
+    var pi = Math.PI;
+    if(angle >= -pi/8 && angle <= pi/8){
+        return 'Right';
+    } else if(angle >= pi/8 && angle <= 3*pi/8)  {
+        return 'FrontRight';
+    } else if(angle >= 3*pi/8 && angle <= 5*pi/8) {
+        return 'Front';
+    } else if(angle >= 5*pi/8 &&  angle <= 7*pi/8) {
+        return 'FrontLeft';
+    } else if((angle >= 7*pi/8 && angle <= 2*pi) || (angle <= -7*pi/8 && angle >= -2*pi)) {
+        return 'Left';
+    } else if(angle >= -7*pi/8 && angle <= -5*pi/8) {
+        return 'BackLeft';
+    } else if(angle >= -5*pi/8 && angle <= -3*pi/8) {
+        return 'Back';
+    } else if(angle >= -3*pi/8 && angle <= -pi/8) {
+        return 'BackRight';
+    }
+}
 
-animationSpeed = 7;
 
-debug = false;
+/* 
+ * Return type of tile 
+ * TODO do this more isometric correct
+ * int
+ */
+function getTile(x, y, map) {
+    return map.tiles[Math.ceil(y/tileSize - 0.5)+1][Math.ceil(x /tileSize  - 0.5)+1];
+}
 
 
+/*
+ * Create fire
+ * fire object
+ */
+function createFire(){
+    fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
+    fire.scale.setTo(0.4, 0.4);
+    fire.anchor.set(1,1);
+    fire.animations.add('fire', [0,1,2,3]);
+    fire.animations.play('fire',15, true);
+    game.physics.isoArcade.enable(fire);
+    fire.body.collideWorldBounds = true;
+    return fire;
+}
