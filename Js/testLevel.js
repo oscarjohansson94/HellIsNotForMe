@@ -128,53 +128,12 @@ var test_state = {
         // Scale deping on game size
         var scale = game.width / 1280;
 
-        //Hud 
-        hud = game.add.image(0,game.height-127*scale, 'Hud');
-        hudGroup.add(hud);
-        hud.fixedToCamera = true;
-        hud.cropEnabled = true;
-        hud.scale.setTo(scale,scale);
-
-        // Healthbar
-        healthBar = game.add.image(game.width - 343*scale,game.height - 108*scale, 'HealthBar');
-        hudGroup.add(healthBar);
-        healthBar.fixedToCamera = true;
-        healthBar.cropEnabled = true;
-        healthBar.scale.setTo(scale, scale);
-        healthBar.maxWidth = healthBar.width;
-
-        // Energybar
-        energyBar = game.add.image(game.width - 343*scale,game.height - 54*scale, 'EnergyBar');
-        hudGroup.add(energyBar);
-        energyBar.fixedToCamera = true;
-        energyBar.cropEnabled = true;
-        energyBar.scale.setTo(scale, scale);
-        energyBar.maxWidth = energyBar.width;
+        //Hud
+        createHud(game,hudGroup, scale);
 
         // Buttons
-        game.QButton = game.add.image(22*scale, game.height - 109*scale, 'QButton');
-        game.QButton.fixedToCamera = true;
-        game.QButton.cropEnabled = true;
-        game.QButton.scale.setTo(scale, scale);
-        game.QButtonPressed = game.add.image(22*scale, game.height - 109*scale, 'QButtonPressed');
-        game.QButtonPressed.fixedToCamera = true;
-        game.QButtonPressed.cropEnabled = true;
-        game.QButtonPressed.scale.setTo(scale, scale);
-        game.QButtonPressed.visible = false;
-        hudGroup.add(game.QButton);
-        hudGroup.add(game.QButtonPressed);
-        game.WButton = game.add.image(140*scale, game.height - 109*scale, 'WButton');
-        game.WButton.fixedToCamera = true;
-        game.WButton.cropEnabled = true;
-        game.WButton.scale.setTo(scale, scale);
-        game.WButtonPressed = game.add.image(140*scale, game.height - 109*scale, 'WButtonPressed');
-        game.WButtonPressed.fixedToCamera = true;
-        game.WButtonPressed.cropEnabled = true;
-        game.WButtonPressed.scale.setTo(scale, scale);
-        game.WButtonPressed.visible = false;
-        hudGroup.add(game.WButton);
-        hudGroup.add(game.WButtonPressed);
-
+        createButtons(game, hudGroup,scale);
+        console.log(hudGroup.length);
 
             },
     update: function() {
@@ -188,8 +147,8 @@ var test_state = {
         });
 
         // Scale health and energy bar deping on life
-        healthBar.width = healthBar.maxWidth*Math.max(player.health, 0)/player.maxHealth;
-        energyBar.width = energyBar.maxWidth*Math.max(player.energy, 0)/player.maxEnergy;
+        game.healthBar.width = game.healthBar.maxWidth*Math.max(player.health, 0)/player.maxHealth;
+        game.energyBar.width = game.energyBar.maxWidth*Math.max(player.energy, 0)/player.maxEnergy;
 
         // Clear radius drawing
         this.bitmapData.clear();

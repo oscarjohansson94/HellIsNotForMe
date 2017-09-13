@@ -65,7 +65,7 @@ function createPlayer(player) {
     endAnim = player.Shield.animations.add('End', [7,6,5,4]);
     startAnim = player.Shield.animations.add('Start', [4,5,6,7]);
     startAnim.onLoop.add(function() {
-        player.Shield.animations.play('Idle', 7, true);
+        player.Shield.animations.play('Idle', 10, true);
     }, player.Shield);
     endAnim.onLoop.add(function() {
         player.Shield.visible = false;
@@ -277,3 +277,57 @@ function WbuttonUp() {
         player.Shield.animations.play('End', 28, true);
     }
 }
+
+function createHud(game, hudGroup, scale) {
+
+    //Hud 
+    game.hud = game.add.image(0,game.height-127*scale, 'Hud');
+    hudGroup.add(game.hud);
+    game.hud.fixedToCamera = true;
+    game.hud.cropEnabled = true;
+    game.hud.scale.setTo(scale,scale);
+
+    // Healthbar
+        game.healthBar = game.add.image(game.width - 343*scale,game.height - 108*scale, 'HealthBar');
+    hudGroup.add(game.healthBar);
+    game.healthBar.scale.setTo(scale, scale);
+    game.healthBar.fixedToCamera = true;
+    game.healthBar.cropEnabled = true;
+    game.healthBar.maxWidth = game.healthBar.width;
+
+    // Energybar
+    game.energyBar = game.add.image(game.width - 343*scale,game.height - 54*scale, 'EnergyBar');
+    game.energyBar.fixedToCamera = true;
+    game.energyBar.cropEnabled = true;
+    game.energyBar.scale.setTo(scale, scale);
+    game.energyBar.maxWidth = game.energyBar.width;
+    hudGroup.add(game.energyBar);
+}
+
+function createButtons(game, hudGroup, scale) {
+    game.QButton = game.add.image(22*scale, game.height - 109*scale, 'QButton');
+    game.QButton.fixedToCamera = true;
+    game.QButton.cropEnabled = true;
+    game.QButton.scale.setTo(scale, scale);
+    game.QButtonPressed = game.add.image(22*scale, game.height - 109*scale, 'QButtonPressed');
+    game.QButtonPressed.fixedToCamera = true;
+    game.QButtonPressed.cropEnabled = true;
+    game.QButtonPressed.scale.setTo(scale, scale);
+    game.QButtonPressed.visible = false;
+    hudGroup.add(game.QButton);
+    hudGroup.add(game.QButtonPressed);
+    game.WButton = game.add.image(140*scale, game.height - 109*scale, 'WButton');
+    game.WButton.fixedToCamera = true;
+    game.WButton.cropEnabled = true;
+    game.WButton.scale.setTo(scale, scale);
+    game.WButtonPressed = game.add.image(140*scale, game.height - 109*scale, 'WButtonPressed');
+    game.WButtonPressed.fixedToCamera = true;
+    game.WButtonPressed.cropEnabled = true;
+    game.WButtonPressed.scale.setTo(scale, scale);
+    game.WButtonPressed.visible = false;
+    hudGroup.add(game.WButton);
+    hudGroup.add(game.WButtonPressed);
+}
+
+
+
