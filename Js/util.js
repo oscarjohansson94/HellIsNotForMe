@@ -51,7 +51,74 @@ function createPlayer(player) {
     player.fire = null;
     player.minTargetDistance = 10;
     player.target =  null;
+    player.damage = 0;
+    player.angleToTarget = 0;
 
+    // Create target
+    player.target = new Phaser.Plugin.Isometric.Point3();
+
+
+    player.takeDamage = function(damage) { 
+        player.damage += damage;
+    };
+    player.updateFire = function(map) {
+        if(player.burning){
+            player.fire.body.x = player.body.x;
+            player.fire.body.y = player.body.y;
+            player.takeDamage(1);
+        }
+
+        if(!player.Shield.visible && !player.burning && getTile(player.body.x, player.body.y, map) == tileEnum.LAVA){
+            player.burning = true;
+            player.fire = createFire(player.body.x, player.body.y);
+
+        } else if((player.burning && getTile(player.body.x, player.body.y, map) != tileEnum.LAVA) 
+            || (player.Shield.visible && player.burning)){
+            player.fire.destroy();
+            player.burning = false;
+        }
+    };
+
+    player.updateMove = function(){
+
+        // Get angle between pointer and player
+        player.angleToTarget = Math.atan2(player.target.y - player.body.y, player.target.x - player.body.x);
+
+        if(game.input.activePointer.isDown){
+            game.iso.unproject(game.input.activePointer.position, player.target);
+            player.moving = true;
+        }
+        if(player.moving) {
+            player.distanceToTarget = Math.sqrt(Math.pow(player.target.x - player.body.x, 2)+ Math.pow(player.target.y - player.body.y, 2));
+            if(player.distanceToTarget <= player.minTargetDistance){
+                player.moving = false;
+                player.body.velocity.x = 0;
+                player.body.velocity.y = 0;
+                player.animations.play('IdlePlayer' + getAnimationDirection(player.angleToTarget), animationSpeed, true);
+            } else { 
+                player.animations.play('RunPlayer' + getAnimationDirection(player.angleToTarget), animationSpeed, true);
+                player.body.velocity.x = Math.cos(player.angleToTarget) * player.speed;
+                player.body.velocity.y = Math.sin(player.angleToTarget) * player.speed;
+            }
+        }
+    }
+
+    player.update = function(map) {
+        if(map){
+            player.updateFire(map);
+            player.updateMove();
+        }
+    }
+
+    player.endOfFrame = function() {
+        if(player.damage) {
+            player.health -= player.damage;
+            player.damage = 0;
+        } else if(player.health < player.maxHealth) {
+            player.health++;
+        }
+    }
+     
     game.physics.isoArcade.enable(player);
     player.body.collideWorldBounds = true;
 }

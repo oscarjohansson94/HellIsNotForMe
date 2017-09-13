@@ -1,5 +1,5 @@
 var test_state = {
-    map: map02,
+    map: map03,
     nrTilesX: 0,
     nrTilesY: 0,
     bitmapData : null,
@@ -195,26 +195,8 @@ var test_state = {
         abilityGroup.add(player.Shield);
     },
     update: function() {
-
-        // TODO needs to handle player health regeneration better
-        if(player.burning){
-            player.fire.body.x = player.body.x;
-            player.fire.body.y = player.body.y;
-            player.health--;
-        } else if(player.health < 100) {
-            player.health++;
-        }
-
-        if(!player.Shield.visible && !player.burning && getTile(player.body.x, player.body.y, this.map) == tileEnum.LAVA){
-            player.burning = true;
-            player.fire = createFire(player.body.x, player.body.y);
-
-        } else if((player.burning && getTile(player.body.x, player.body.y, this.map) != tileEnum.LAVA) 
-            || (player.Shield.visible && player.burning)){
-            player.fire.destroy();
-            player.burning = false;
-        }
-
+        
+        player.update(this.map);
 
         // Make the liquids move "naturally"
         liquidGroup.forEach(function (w) {
@@ -225,28 +207,6 @@ var test_state = {
         // Scale health and energy bar deping on life
         healthBar.width = healthBar.maxWidth*Math.max(player.health, 0)/player.maxHealth;
         energyBar.width = energyBar.maxWidth*Math.max(player.energy, 0)/player.maxEnergy;
-
-        // Get angle between pointer and player
-        var playerToTargetAngle = Math.atan2(player.target.y - player.body.y, player.target.x - player.body.x);
-        var pointerDistance = game.physics.arcade.distanceToPointer(player);
-
-        if(game.input.activePointer.isDown){
-            game.iso.unproject(game.input.activePointer.position, player.target);
-            player.moving = true;
-        }
-        if(player.moving) {
-            var distancePlayerTarget = Math.sqrt(Math.pow(player.target.x - player.body.x, 2)+ Math.pow(player.target.y - player.body.y, 2));
-            if(distancePlayerTarget <= player.minTargetDistance){
-                player.moving = false;
-                player.body.velocity.x = 0;
-                player.body.velocity.y = 0;
-                player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), animationSpeed, true);
-            } else { 
-                player.animations.play('RunPlayer' + getAnimationDirection(playerToTargetAngle), animationSpeed, true);
-                player.body.velocity.x = Math.cos(playerToTargetAngle) * player.speed;
-                player.body.velocity.y = Math.sin(playerToTargetAngle) * player.speed;
-            }
-        }
 
         // Clear radius drawing
         this.bitmapData.clear();
@@ -277,7 +237,7 @@ var test_state = {
                 e.body.velocity.x = 0;
                 e.body.velocity.y = 0;
                 if(distanceEnemyToPlayer <= e.minAttackDistance) {
-                    player.health -= 2;
+                    player.takeDamage(1);
                     e.animations.currentAnim.speed = animationSpeed * 10;
                 }
             } else {
@@ -311,15 +271,14 @@ var test_state = {
                 e.radiusStart %= 360;
             }
         }
-
         // Check for border collision
-        borderGroup.forEach(function(w) {
-            game.physics.arcade.overlap(w, player, 
+        borderGroup.forEach(function(b) {
+            game.physics.arcade.overlap(b, player, 
                 function() {
                     player.body.velocity.x = 0;
                     player.body.velocity.y = 0;
-                    player.animations.play('IdlePlayer' + getAnimationDirection(playerToTargetAngle), animationSpeed, true);
-                    game.physics.isoArcade.collide(w,player);
+                    player.animations.play('IdlePlayer' + getAnimationDirection(player.angleToTarget), animationSpeed, true);
+                    game.physics.isoArcade.collide(b,player);
                 }
                 , null, this);
         });
@@ -334,6 +293,8 @@ var test_state = {
         game.world.bringToTop(player);
         game.world.bringToTop(hudGroup);
         game.world.bringToTop(abilityGroup);
+        
+        player.endOfFrame();
     },
     render: function () {
         if(debug){
@@ -377,5 +338,3 @@ var test_state = {
     }
 
 };
-
-
