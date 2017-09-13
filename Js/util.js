@@ -14,6 +14,7 @@ enemyEnum = {
     STAIR: 2
 }
 
+
 /*
  * Create the player
  * void
@@ -53,14 +54,39 @@ function createPlayer(player) {
     player.target =  null;
     player.damage = 0;
     player.angleToTarget = 0;
+    player.energyDrain = 0;
 
     // Create target
     player.target = new Phaser.Plugin.Isometric.Point3();
 
+    // EnergyShield
+    player.Shield = game.add.isoSprite(0, 0,0,'Shield',0);
+    player.Shield.animations.add('Idle', [0,1,2,3]);
+    endAnim = player.Shield.animations.add('End', [7,6,5,4]);
+    startAnim = player.Shield.animations.add('Start', [4,5,6,7]);
+    startAnim.onLoop.add(function() {
+        player.Shield.animations.play('Idle', 7, true);
+  }, player.Shield);
+    endAnim.onLoop.add(function() {
+        player.Shield.visible = false;
+        player.Shield.animations.stop();
+  }, player.Shield);
+
+    player.Shield.visible = false;
+    player.Shield.fixedToCamera = true;
+    game.physics.isoArcade.enable(player.Shield);
+    player.Shield.collideWorldBounds = true;
+    player.Shield.scale.setTo(0.5, 0.2);
+    abilityGroup.add(player.Shield);
 
     player.takeDamage = function(damage) { 
         player.damage += damage;
     };
+
+    player.reduceEnergy = function(energy) {
+        player.energyDrain += energy;
+    }
+
     player.updateFire = function(map) {
         if(player.burning){
             player.fire.body.x = player.body.x;
@@ -101,12 +127,23 @@ function createPlayer(player) {
                 player.body.velocity.y = Math.sin(player.angleToTarget) * player.speed;
             }
         }
+
+    }
+    player.updateShield = function() {
+            if(player.Shield.visible) {
+                console.log("Reduce energy");
+                player.reduceEnergy(1);
+                player.Shield.body.x = player.body.x;
+                player.Shield.body.y = player.body.y ;
+                player.Shield.body.z = player.body.z + 25;
+            }
     }
 
     player.update = function(map) {
         if(map){
-            player.updateFire(map);
             player.updateMove();
+            player.updateFire(map);
+            player.updateShield();
         }
     }
 
@@ -117,8 +154,14 @@ function createPlayer(player) {
         } else if(player.health < player.maxHealth) {
             player.health++;
         }
+        if(player.energyDrain) {
+            player.energy -= player.energyDrain;
+            player.energyDrain = 0;
+        } else if(player.energy < player.maxEnergy) {
+            player.energy++;
+        }
     }
-     
+
     game.physics.isoArcade.enable(player);
     player.body.collideWorldBounds = true;
 }

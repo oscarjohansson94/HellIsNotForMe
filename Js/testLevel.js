@@ -17,6 +17,7 @@ var test_state = {
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
         this.load.spritesheet('EnemyBatSprite', '../Res/Images/SpriteSheet/EnemyBat.png', 272, 282, 28);
         this.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
+        this.load.spritesheet('Shield', '../Res/Images/SpriteSheet/Shield.png', 201,100, 8); 
         this.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
         this.load.image('EnergyBar', '../Res/Images/SpriteSheet/energyBar.png');
         this.load.image('Hud', '../Res/Images/SpriteSheet/Hud.png');
@@ -24,7 +25,6 @@ var test_state = {
         this.load.image('QButtonPressed', '../Res/Images/SpriteSheet/QButtonPressed.png');
         this.load.image('WButton', '../Res/Images/SpriteSheet/WButton.png');
         this.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
-        this.load.image('Shield', '../Res/Images/SpriteSheet/shield.png');
         this.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
 
         // Load map tiles
@@ -127,9 +127,6 @@ var test_state = {
         player = game.add.isoSprite(this.map.start.x * tileSize,this.map.start.y * tileSize,0, 'PlayerSprite',0);
         createPlayer(player);
 
-        // Create target
-        player.target = new Phaser.Plugin.Isometric.Point3();
-
         // Camera should follow player
         game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 
@@ -185,15 +182,7 @@ var test_state = {
         hudGroup.add(this.WButtonPressed);
 
 
-        // EnergyShield
-        player.Shield = game.add.isoSprite(0, 0,0,'Shield',0);
-        player.Shield.visible = false;
-        player.Shield.fixedToCamera = true;
-        game.physics.isoArcade.enable(player.Shield);
-        player.Shield.collideWorldBounds = true;
-        player.Shield.scale.setTo(0.2, 0.2);
-        abilityGroup.add(player.Shield);
-    },
+            },
     update: function() {
         
         player.update(this.map);
@@ -213,14 +202,11 @@ var test_state = {
 
         // Drain energy
         if(this.showRadius) {
-            player.energy -= 0.1;
+            player.reduceEnergy(1);
             if(player.energy <= 0){
                 this.QbuttonUp();
             }
-
-        } else if(player.energy < player.maxEnergy) {
-            player.energy++;
-        }
+        } 
 
         // Update bat, expand for containers with enemies
         var distanceEnemyToPlayer;
@@ -244,13 +230,6 @@ var test_state = {
                 e.body.velocity.x = Math.cos(enemyToPlayerAngle) * e.speed;
                 e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;
             }
-
-            if(player.Shield.visible) {
-                player.Shield.body.x = player.body.x+ 7;
-                player.Shield.body.y = player.body.y + 10;
-                player.Shield.body.z = player.body.z;
-            }
-
             // Equation of circle to draw vision radius
             if(this.showRadius) {
                 var radius = e.radius;
@@ -325,6 +304,7 @@ var test_state = {
     WbuttonDown: function(){ 
         if(this.WButton != null && this.WButtonPressed != null){
             player.Shield.visible = true;
+            player.Shield.animations.play('Start', 14, true);
             this.WButton.visible = false;
             this.WButtonPressed.visible = true;
         }
@@ -333,7 +313,7 @@ var test_state = {
         if(this.WButton != null && this.WButtonPressed != null){
             this.WButton.visible = true;
             this.WButtonPressed.visible = false;
-            player.Shield.visible = false;
+            player.Shield.animations.play('End', 14, true);
         }
     }
 
