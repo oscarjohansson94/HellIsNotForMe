@@ -132,7 +132,6 @@ function createPlayer(player) {
     }
     player.updateShield = function() {
         if(player.Shield.visible) {
-            console.log("Reduce energy");
             player.reduceEnergy(1);
             player.Shield.body.x = player.body.x;
             player.Shield.body.y = player.body.y ;
@@ -288,7 +287,7 @@ function createHud(game, hudGroup, scale) {
     game.hud.scale.setTo(scale,scale);
 
     // Healthbar
-        game.healthBar = game.add.image(game.width - 343*scale,game.height - 108*scale, 'HealthBar');
+    game.healthBar = game.add.image(game.width - 343*scale,game.height - 108*scale, 'HealthBar');
     hudGroup.add(game.healthBar);
     game.healthBar.scale.setTo(scale, scale);
     game.healthBar.fixedToCamera = true;
@@ -328,6 +327,15 @@ function createButtons(game, hudGroup, scale) {
     hudGroup.add(game.WButton);
     hudGroup.add(game.WButtonPressed);
 }
+
+// Make the liquids move "naturally"
+function updateLiquid(liquidGroup) {
+    liquidGroup.forEach(function (w) {
+        w.isoZ = (-2 * Math.sin((game.time.now + (w.isoX * 7)) * 0.004)) + (-1 * Math.sin((game.time.now + (w.isoY * 8)) * 0.005));
+        w.alpha = Phaser.Math.clamp(1 + (w.isoZ * 0.1), 0.2, 1);
+    });
+}
+
 
 
 

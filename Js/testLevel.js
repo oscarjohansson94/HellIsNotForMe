@@ -1,5 +1,5 @@
 var test_state = {
-    map: map03,
+    map: map02,
     nrTilesX: 0,
     nrTilesY: 0,
     bitmapData : null,
@@ -110,7 +110,6 @@ var test_state = {
                     enemyGroup.add(enemy);
                 }
                 else if(enemyType == enemyEnum.STAIR) {
-                    console.log("creating stair");
                     enemy = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,'Stair', 0, borderGroup);
                     enemy.scale.setTo(0.4, 0.4);
                 }
@@ -133,18 +132,13 @@ var test_state = {
 
         // Buttons
         createButtons(game, hudGroup,scale);
-        console.log(hudGroup.length);
 
             },
     update: function() {
         
         player.update(this.map);
 
-        // Make the liquids move "naturally"
-        liquidGroup.forEach(function (w) {
-            w.isoZ = (-2 * Math.sin((game.time.now + (w.isoX * 7)) * 0.004)) + (-1 * Math.sin((game.time.now + (w.isoY * 8)) * 0.005));
-            w.alpha = Phaser.Math.clamp(1 + (w.isoZ * 0.1), 0.2, 1);
-        });
+        updateLiquid(liquidGroup);
 
         // Scale health and energy bar deping on life
         game.healthBar.width = game.healthBar.maxWidth*Math.max(player.health, 0)/player.maxHealth;
