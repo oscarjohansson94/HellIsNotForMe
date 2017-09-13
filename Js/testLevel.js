@@ -6,12 +6,6 @@ var test_state = {
     bitmapDataBrush : null,
     keyQ: null,
     keyW: null,
-    QButton: null,
-    QButtonPressed: null,
-    WButton: null,
-    WButtonPressed: null,
-    showRadius: false,
-
     preload: function() {
         // Load sprite sheet containing all player movements
         this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
@@ -52,13 +46,13 @@ var test_state = {
         // Set background color
         game.stage.backgroundColor = "#000000";
 
-        this.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
-        this.keyQ.onDown.add(this.QbuttonDown,this);
-        this.keyQ.onUp.add(this.QbuttonUp,this);
+        game.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
+        game.keyQ.onDown.add(QbuttonDown,this);
+        game.keyQ.onUp.add(QbuttonUp,this);
 
-        this.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
-        this.keyW.onDown.add(this.WbuttonDown,this);
-        this.keyW.onUp.add(this.WbuttonUp,this);
+        game.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
+        game.keyW.onDown.add(WbuttonDown,this);
+        game.keyW.onUp.add(WbuttonUp,this);
 
         // Create groups
         floorGroup = game.add.group();
@@ -158,28 +152,28 @@ var test_state = {
         energyBar.maxWidth = energyBar.width;
 
         // Buttons
-        this.QButton = game.add.image(22*scale, game.height - 109*scale, 'QButton');
-        this.QButton.fixedToCamera = true;
-        this.QButton.cropEnabled = true;
-        this.QButton.scale.setTo(scale, scale);
-        this.QButtonPressed = game.add.image(22*scale, game.height - 109*scale, 'QButtonPressed');
-        this.QButtonPressed.fixedToCamera = true;
-        this.QButtonPressed.cropEnabled = true;
-        this.QButtonPressed.scale.setTo(scale, scale);
-        this.QButtonPressed.visible = false;
-        hudGroup.add(this.QButton);
-        hudGroup.add(this.QButtonPressed);
-        this.WButton = game.add.image(140*scale, game.height - 109*scale, 'WButton');
-        this.WButton.fixedToCamera = true;
-        this.WButton.cropEnabled = true;
-        this.WButton.scale.setTo(scale, scale);
-        this.WButtonPressed = game.add.image(140*scale, game.height - 109*scale, 'WButtonPressed');
-        this.WButtonPressed.fixedToCamera = true;
-        this.WButtonPressed.cropEnabled = true;
-        this.WButtonPressed.scale.setTo(scale, scale);
-        this.WButtonPressed.visible = false;
-        hudGroup.add(this.WButton);
-        hudGroup.add(this.WButtonPressed);
+        game.QButton = game.add.image(22*scale, game.height - 109*scale, 'QButton');
+        game.QButton.fixedToCamera = true;
+        game.QButton.cropEnabled = true;
+        game.QButton.scale.setTo(scale, scale);
+        game.QButtonPressed = game.add.image(22*scale, game.height - 109*scale, 'QButtonPressed');
+        game.QButtonPressed.fixedToCamera = true;
+        game.QButtonPressed.cropEnabled = true;
+        game.QButtonPressed.scale.setTo(scale, scale);
+        game.QButtonPressed.visible = false;
+        hudGroup.add(game.QButton);
+        hudGroup.add(game.QButtonPressed);
+        game.WButton = game.add.image(140*scale, game.height - 109*scale, 'WButton');
+        game.WButton.fixedToCamera = true;
+        game.WButton.cropEnabled = true;
+        game.WButton.scale.setTo(scale, scale);
+        game.WButtonPressed = game.add.image(140*scale, game.height - 109*scale, 'WButtonPressed');
+        game.WButtonPressed.fixedToCamera = true;
+        game.WButtonPressed.cropEnabled = true;
+        game.WButtonPressed.scale.setTo(scale, scale);
+        game.WButtonPressed.visible = false;
+        hudGroup.add(game.WButton);
+        hudGroup.add(game.WButtonPressed);
 
 
             },
@@ -201,10 +195,10 @@ var test_state = {
         this.bitmapData.clear();
 
         // Drain energy
-        if(this.showRadius) {
+        if(game.showRadius) {
             player.reduceEnergy(1);
             if(player.energy <= 0){
-                this.QbuttonUp();
+                QbuttonUp();
             }
         } 
 
@@ -231,7 +225,7 @@ var test_state = {
                 e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;
             }
             // Equation of circle to draw vision radius
-            if(this.showRadius) {
+            if(game.showRadius) {
                 var radius = e.radius;
                 var theta = e.radiusStart;  // angle that will be increased each loop
                 var h = e.body.x; // x coordinate of circle center
@@ -287,34 +281,6 @@ var test_state = {
     fadeComplete: function(){
         game.state.restart();
     },
-    QbuttonDown: function(){ 
-        if(this.QButton != null && this.QButtonPressed != null){
-            this.showRadius = true;
-            this.QButton.visible = false;
-            this.QButtonPressed.visible = true;
-        }
-    },
-    QbuttonUp: function() {
-        if(this.QButton != null && this.QButtonPressed != null){
-            this.showRadius = false;
-            this.QButton.visible = true;
-            this.QButtonPressed.visible = false;
-        }
-    },    
-    WbuttonDown: function(){ 
-        if(this.WButton != null && this.WButtonPressed != null){
-            player.Shield.visible = true;
-            player.Shield.animations.play('Start', 14, true);
-            this.WButton.visible = false;
-            this.WButtonPressed.visible = true;
-        }
-    },
-    WbuttonUp: function() {
-        if(this.WButton != null && this.WButtonPressed != null){
-            this.WButton.visible = true;
-            this.WButtonPressed.visible = false;
-            player.Shield.animations.play('End', 14, true);
-        }
-    }
+   
 
 };

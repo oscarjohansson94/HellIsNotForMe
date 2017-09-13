@@ -66,11 +66,11 @@ function createPlayer(player) {
     startAnim = player.Shield.animations.add('Start', [4,5,6,7]);
     startAnim.onLoop.add(function() {
         player.Shield.animations.play('Idle', 7, true);
-  }, player.Shield);
+    }, player.Shield);
     endAnim.onLoop.add(function() {
         player.Shield.visible = false;
         player.Shield.animations.stop();
-  }, player.Shield);
+    }, player.Shield);
 
     player.Shield.visible = false;
     player.Shield.fixedToCamera = true;
@@ -78,6 +78,7 @@ function createPlayer(player) {
     player.Shield.collideWorldBounds = true;
     player.Shield.scale.setTo(0.5, 0.2);
     abilityGroup.add(player.Shield);
+    player.game = game;
 
     player.takeDamage = function(damage) { 
         player.damage += damage;
@@ -130,13 +131,17 @@ function createPlayer(player) {
 
     }
     player.updateShield = function() {
-            if(player.Shield.visible) {
-                console.log("Reduce energy");
-                player.reduceEnergy(1);
-                player.Shield.body.x = player.body.x;
-                player.Shield.body.y = player.body.y ;
-                player.Shield.body.z = player.body.z + 25;
+        if(player.Shield.visible) {
+            console.log("Reduce energy");
+            player.reduceEnergy(1);
+            player.Shield.body.x = player.body.x;
+            player.Shield.body.y = player.body.y ;
+            player.Shield.body.z = player.body.z + 25;
+            if(player.energy <= 0) {
+                WbuttonUp();
             }
+        }
+
     }
 
     player.update = function(map) {
@@ -242,4 +247,33 @@ function createFire(){
     game.physics.isoArcade.enable(fire);
     fire.body.collideWorldBounds = true;
     return fire;
+}
+function QbuttonDown(){ 
+    if(player.game.QButton != null && player.game.QButtonPressed != null){
+        game.showRadius = true;
+        player.game.QButton.visible = false;
+        player.game.QButtonPressed.visible = true;
+    }
+}
+function QbuttonUp() {
+    if(player.game.QButton != null && player.game.QButtonPressed != null){
+        game.showRadius = false;
+        player.game.QButton.visible = true;
+        player.game.QButtonPressed.visible = false;
+    }
+}
+function WbuttonDown(){ 
+    if(player.game.WButton != null && player.game.WButtonPressed != null){
+        player.Shield.visible = true;
+        player.Shield.animations.play('Start', 28, true);
+        player.game.WButton.visible = false;
+        player.game.WButtonPressed.visible = true;
+    }
+}
+function WbuttonUp() {
+    if(player.game.WButton != null && player.game.WButtonPressed != null){
+        player.game.WButton.visible = true;
+        player.game.WButtonPressed.visible = false;
+        player.Shield.animations.play('End', 28, true);
+    }
 }
