@@ -1,5 +1,15 @@
 animationSpeed = 7;
-debug = false;
+showDebug = true;
+
+function debug(game, player){
+    if(showDebug){
+        game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
+        game.obstacleGroup.forEach(function(tile){
+            game.debug.body(tile, 'rgba(189, 221, 235, 0.6)', false);
+        });
+        game.debug.body(game.stair, 'rgba(189, 221, 235, 0.6)', false);
+    }
+}
 
 tileEnum = {
     EMPTY: 0,
@@ -13,6 +23,164 @@ enemyEnum = {
     BAT: 1,
     STAIR: 2
 }
+
+
+function preloadState(game) {
+    loadAssets(game);
+    preloadGame(game);
+}
+
+function createState(game) {
+    createGame(game);
+    createBitmap(game);
+
+    // Create player
+    game.player = game.add.isoSprite(game.map.start.x * tileSize,game.map.start.y * tileSize,0, 'PlayerSprite',0);
+    createPlayer(game.player);
+
+    // Camera should follow player
+    game.camera.follow(game.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+    //Hud
+    createHud(game,game.hudGroup);
+
+    // Buttons
+    createButtons(game, game.hudGroup);
+}
+
+function updateState(game) {
+    game.player.update(game);
+    updateLiquid(game.liquidGroup);
+
+    // Scale health and energy bar deping on life
+    game.healthBar.width = game.healthBar.maxWidth*Math.max(game.player.health, 0)/game.player.maxHealth;
+    game.energyBar.width = game.energyBar.maxWidth*Math.max(game.player.energy, 0)/game.player.maxEnergy;
+
+    // Clear radius drawing
+    game.bitmapData.clear();
+
+    updateEnemies(game);
+    // Check for border collision
+    game.obstacleGroup.forEach(function(b) {
+        game.physics.isoArcade.collide(b,game.player);
+    });
+    game.physics.isoArcade.collide(game.stair, game.player, function() {
+    console.log("CLIMB THE STAIR");
+    })
+    sortGame(game);
+    game.player.endOfFrame();
+}
+
+function renderState(game) {
+    debug(game, game.player);
+    game.debug.text(game.time.fps, 2, 14, "#a7aebe");
+}
+
+
+/* 
+ * sort to display correct object above other
+ */
+function sortGame(game) {
+    game.world.bringToTop(game.enemyGroup);
+    game.world.bringToTop(game.player);
+    game.world.bringToTop(game.hudGroup);
+    game.world.bringToTop(game.abilityGroup);
+}
+
+
+
+function generateMap(game) {
+    for( var y = 1; y < game.nrTilesY - 1; y++) {
+        for(var x = 1; x < game.nrTilesX - 1; x++){
+            // Generate tile
+            var tileType = game.map.tiles[y][x];
+            var tile;
+            if(tileType == tileEnum.FLOOR01) {
+                tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', game.map.tiles[y][x] - 1, game.floorGroup);
+                tile.anchor.set(0.5,1);
+            } else if(tileType == tileEnum.LAVA) {
+                tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', game.map.tiles[y][x] - 1, game.liquidGroup);
+                tile.isoZ += 6;
+                game.liquidGroup.add(tile);
+                game.physics.isoArcade.enable(tile);
+                tile.body.collideWorldBounds = true;
+                tile.anchor.set(0.5,1);
+                tile.body.immovable = true;
+            } else if(tileType == tileEnum.BORDER){
+                tile = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,null, 0, game.obstacleGroup);
+                tile.enableBody = true;
+                tile.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
+                game.physics.isoArcade.enable(tile);
+                tile.body.setSize(tileSize,tileSize+1,tileSize+1, 0 ,0, 0);
+                tile.body.immovable = true;
+                tile.body.collideWorldBounds = true;
+                tile.anchor.set(0.5,1);
+            } else {
+                // EMPTY TILE
+            }
+
+            //Generate enemy{
+            var enemyType = game.map.enemies[y][x];
+            var enemy;
+            if(enemyType == enemyEnum.BAT) {
+                enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, game.enemyGroup);
+                enemy.radiusStart = 0;
+                createBat(enemy);
+                game.flyingGroup.add(enemy);
+                game.enemyGroup.add(enemy);
+            }
+            else if(enemyType == enemyEnum.STAIR) {
+                enemy = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,'Stair', 0);
+                enemy.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
+                game.physics.isoArcade.enable(enemy);
+                enemy.scale.setTo(0.4, 0.4);
+                enemy.body.immovable = true;
+                enemy.body.collideWorldBounds = true;
+                game.stair = enemy;
+            }
+        }
+    }
+}
+
+
+
+function createGame(game) {
+    // Set gravity
+    game.physics.isoArcade.gravity.setTo(0, 0, -500);
+
+    // Set background color
+    game.stage.backgroundColor = "#000000";
+
+    game.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
+    game.keyQ.onDown.add(QbuttonDown,this);
+    game.keyQ.onUp.add(QbuttonUp,this);
+
+    game.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
+    game.keyW.onDown.add(WbuttonDown,this);
+    game.keyW.onUp.add(WbuttonUp,this);
+
+    // Create groups
+    game.floorGroup = game.add.group();
+    game.enemyGroup = game.add.group(); 
+    game.liquidGroup= game.add.group();
+    game.hudGroup = game.add.group();
+    game.obstacleGroup = game.add.group();
+    game.walkingGroup = game.add.group();
+    game.flyingGroup = game.add.group();
+    game.abilityGroup = game.add.group();
+    // Scale deping on game size
+    game.scaleFactor = game.width / 1280;
+
+
+}
+
+function createBitmap(game) {
+    game.bitmapData = game.make.bitmapData(3000, 3000);
+    game.bitmapData.addToWorld();
+    game.bitmapDataBrush = game.make.bitmapData(32, 32);
+    game.bitmapDataBrush.circle(2, 2, 2, 'rgba(24,234,236,1)');
+    generateMap(game);
+}
+
 
 function preloadGame(game) {
     game.time.advancedTiming = true;
@@ -111,8 +279,7 @@ function createPlayer(player) {
     game.physics.isoArcade.enable(player.Shield);
     player.Shield.collideWorldBounds = true;
     player.Shield.scale.setTo(0.5, 0.2);
-    abilityGroup.add(player.Shield);
-    player.game = game;
+    game.abilityGroup.add(player.Shield);
 
     player.takeDamage = function(damage) { 
         player.damage += damage;
@@ -129,11 +296,11 @@ function createPlayer(player) {
             player.takeDamage(1);
         }
 
-        if(!player.Shield.visible && !player.burning && getTile(player.body.x, player.body.y, map) == tileEnum.LAVA){
+        if(!player.Shield.visible && !player.burning && getTile(player.body.x, player.body.y, game.map) == tileEnum.LAVA){
             player.burning = true;
-            player.fire = createFire(player.body.x, player.body.y);
+            player.fire = createFire(game);
 
-        } else if((player.burning && getTile(player.body.x, player.body.y, map) != tileEnum.LAVA) 
+        } else if((game.player.burning && getTile(game.player.body.x, game.player.body.y, game.map) != tileEnum.LAVA) 
             || (player.Shield.visible && player.burning)){
             player.fire.destroy();
             player.burning = false;
@@ -164,6 +331,17 @@ function createPlayer(player) {
         }
 
     }
+
+    player.updateRadius = function(game) {
+
+        // Drain energy
+        if(game.showRadius) {
+            player.reduceEnergy(1);
+            if(player.energy <= 0){
+                QbuttonUp();
+            }
+        } 
+    }
     player.updateShield = function() {
         if(player.Shield.visible) {
             player.reduceEnergy(1);
@@ -177,11 +355,21 @@ function createPlayer(player) {
 
     }
 
-    player.update = function(map) {
-        if(map){
+    player.checkDeath = function(game) {
+        // Die
+        if(player.health <= 0){
+            game.camera.fade('#000000');
+            game.camera.onFadeComplete.add(function () {fadeComplete(game)},this);
+        }
+    }
+
+    player.update = function(game) {
+        if(game){
             player.updateMove();
-            player.updateFire(map);
+            player.updateFire(game.map);
             player.updateShield();
+            player.updateRadius(game);
+            player.checkDeath(game);
         }
     }
 
@@ -271,8 +459,8 @@ function getTile(x, y, map) {
  * Create fire
  * fire object
  */
-function createFire(){
-    fire = game.add.isoSprite(player.body.x,player.body.y,0, 'FireSprite',0);
+function createFire(game){
+    fire = game.add.isoSprite(game.player.body.x,game.player.body.y,0, 'FireSprite',0);
     fire.scale.setTo(0.4, 0.4);
     fire.anchor.set(1,1);
     fire.animations.add('fire', [0,1,2,3]);
@@ -281,85 +469,90 @@ function createFire(){
     fire.body.collideWorldBounds = true;
     return fire;
 }
+
+/* functions to add buttons
+ * This should be handld differently
+ * TODO
+ */
 function QbuttonDown(){ 
-    if(player.game.QButton != null && player.game.QButtonPressed != null){
+    if(game.QButton != null && game.QButtonPressed != null){
         game.showRadius = true;
-        player.game.QButton.visible = false;
-        player.game.QButtonPressed.visible = true;
+        game.QButton.visible = false;
+        game.QButtonPressed.visible = true;
     }
 }
 function QbuttonUp() {
-    if(player.game.QButton != null && player.game.QButtonPressed != null){
+    if(game.QButton != null && game.QButtonPressed != null){
         game.showRadius = false;
-        player.game.QButton.visible = true;
-        player.game.QButtonPressed.visible = false;
+        game.QButton.visible = true;
+        game.QButtonPressed.visible = false;
     }
 }
 function WbuttonDown(){ 
-    if(player.game.WButton != null && player.game.WButtonPressed != null){
-        player.Shield.visible = true;
-        player.Shield.animations.play('Start', 28, true);
-        player.game.WButton.visible = false;
-        player.game.WButtonPressed.visible = true;
+    if(game.WButton != null && game.WButtonPressed != null){
+        game.player.Shield.visible = true;
+        game.player.Shield.animations.play('Start', 28, true);
+        game.WButton.visible = false;
+        game.WButtonPressed.visible = true;
     }
 }
 function WbuttonUp() {
-    if(player.game.WButton != null && player.game.WButtonPressed != null){
-        player.game.WButton.visible = true;
-        player.game.WButtonPressed.visible = false;
-        player.Shield.animations.play('End', 28, true);
+    if(game.WButton != null && game.WButtonPressed != null){
+        game.WButton.visible = true;
+        game.WButtonPressed.visible = false;
+        game.player.Shield.animations.play('End', 28, true);
     }
 }
 
-function createHud(game, hudGroup, scale) {
+function createHud(game) {
 
     //Hud 
-    game.hud = game.add.image(0,game.height-127*scale, 'Hud');
-    hudGroup.add(game.hud);
+    game.hud = game.add.image(0,game.height-127*game.scaleFactor, 'Hud');
+    game.hudGroup.add(game.hud);
     game.hud.fixedToCamera = true;
     game.hud.cropEnabled = true;
-    game.hud.scale.setTo(scale,scale);
+    game.hud.scale.setTo(game.scaleFactor,game.scaleFactor);
 
     // Healthbar
-    game.healthBar = game.add.image(game.width - 343*scale,game.height - 108*scale, 'HealthBar');
-    hudGroup.add(game.healthBar);
-    game.healthBar.scale.setTo(scale, scale);
+    game.healthBar = game.add.image(game.width - 343*game.scaleFactor,game.height - 108*game.scaleFactor, 'HealthBar');
+    game.hudGroup.add(game.healthBar);
+    game.healthBar.scale.setTo(game.scaleFactor, game.scaleFactor);
     game.healthBar.fixedToCamera = true;
     game.healthBar.cropEnabled = true;
     game.healthBar.maxWidth = game.healthBar.width;
 
     // Energybar
-    game.energyBar = game.add.image(game.width - 343*scale,game.height - 54*scale, 'EnergyBar');
+    game.energyBar = game.add.image(game.width - 343*game.scaleFactor,game.height - 54*game.scaleFactor, 'EnergyBar');
     game.energyBar.fixedToCamera = true;
     game.energyBar.cropEnabled = true;
-    game.energyBar.scale.setTo(scale, scale);
+    game.energyBar.scale.setTo(game.scaleFactor, game.scaleFactor);
     game.energyBar.maxWidth = game.energyBar.width;
-    hudGroup.add(game.energyBar);
+    game.hudGroup.add(game.energyBar);
 }
 
-function createButtons(game, hudGroup, scale) {
-    game.QButton = game.add.image(22*scale, game.height - 109*scale, 'QButton');
+function createButtons(game) {
+    game.QButton = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'QButton');
     game.QButton.fixedToCamera = true;
     game.QButton.cropEnabled = true;
-    game.QButton.scale.setTo(scale, scale);
-    game.QButtonPressed = game.add.image(22*scale, game.height - 109*scale, 'QButtonPressed');
+    game.QButton.scale.setTo(game.scaleFactor, game.scaleFactor);
+    game.QButtonPressed = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'QButtonPressed');
     game.QButtonPressed.fixedToCamera = true;
     game.QButtonPressed.cropEnabled = true;
-    game.QButtonPressed.scale.setTo(scale, scale);
+    game.QButtonPressed.scale.setTo(game.scaleFactor, game.scaleFactor);
     game.QButtonPressed.visible = false;
-    hudGroup.add(game.QButton);
-    hudGroup.add(game.QButtonPressed);
-    game.WButton = game.add.image(140*scale, game.height - 109*scale, 'WButton');
+    game.hudGroup.add(game.QButton);
+    game.hudGroup.add(game.QButtonPressed);
+    game.WButton = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'WButton');
     game.WButton.fixedToCamera = true;
     game.WButton.cropEnabled = true;
-    game.WButton.scale.setTo(scale, scale);
-    game.WButtonPressed = game.add.image(140*scale, game.height - 109*scale, 'WButtonPressed');
+    game.WButton.scale.setTo(game.scaleFactor, game.scaleFactor);
+    game.WButtonPressed = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'WButtonPressed');
     game.WButtonPressed.fixedToCamera = true;
     game.WButtonPressed.cropEnabled = true;
-    game.WButtonPressed.scale.setTo(scale, scale);
+    game.WButtonPressed.scale.setTo(game.scaleFactor, game.scaleFactor);
     game.WButtonPressed.visible = false;
-    hudGroup.add(game.WButton);
-    hudGroup.add(game.WButtonPressed);
+    game.hudGroup.add(game.WButton);
+    game.hudGroup.add(game.WButtonPressed);
 }
 
 // Make the liquids move "naturally"
@@ -372,4 +565,58 @@ function updateLiquid(liquidGroup) {
 
 
 
+/* 
+ * Gets called when camera fade is complete
+ * Only happens on death, right now
+ * If not extended, rename
+ * TODO
+ */
+function fadeComplete(game){
+    game.state.restart();
+}
+
+function updateEnemies(game) {
+
+    // Update bat, expand for containers with enemies
+    var distanceEnemyToPlayer;
+    var enemyToPlayerAngle;
+    for( var i = 0; i < game.enemyGroup.length; i++) {
+        var e = game.enemyGroup.getAt(i);
+        distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - game.player.body.x, 2) +Math.pow(e.body.y - game.player.body.y, 2));
+
+        enemyToPlayerAngle = Math.atan2(game.player.body.y - e.body.y, game.player.body.x - e.body.x);
+        e.animations.play(e.name + getAnimationDirection(enemyToPlayerAngle), animationSpeed, true);
+
+        if(distanceEnemyToPlayer > e.radius || distanceEnemyToPlayer < e.minAttackDistance) {
+            e.body.velocity.x = 0;
+            e.body.velocity.y = 0;
+            if(distanceEnemyToPlayer <= e.minAttackDistance) {
+                game.player.takeDamage(1);
+                e.animations.currentAnim.speed = animationSpeed * 10;
+            }
+        } else {
+            e.body.velocity.x = Math.cos(enemyToPlayerAngle) * e.speed;
+            e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;
+        }
+
+        // Equation of circle to draw vision radius
+        if(game.showRadius) {
+            var radius = e.radius;
+            var theta = e.radiusStart;  // angle that will be increased each loop
+            var h = e.body.x; // x coordinate of circle center
+            var k = e.body.y; // y coordinate of circle center
+            var step = 15;  // amount to add to theta each time (degrees)
+            while(theta < e.radiusStart + 360)
+            { 
+                var xx = h + radius*Math.cos(theta);
+                var yy = k + radius*Math.sin(theta);
+                var out = game.iso.project({x: xx, y: yy, z: 0});
+                game.bitmapData.draw(game.bitmapDataBrush, out.x, out.y);
+                theta += step;
+            }
+            e.radiusStart += 0.005;
+            e.radiusStart %= 360;
+        }
+    }
+}
 
