@@ -14,6 +14,40 @@ enemyEnum = {
     STAIR: 2
 }
 
+function preloadGame(game) {
+    game.time.advancedTiming = true;
+    game.plugins.add(new Phaser.Plugin.Isometric(game));
+    game.iso.anchor.set(0.5, 0);
+
+    // Increase world size
+    game.nrTilesX = game.map.tiles[0].length; 
+    game.nrTilesY = game.map.tiles.length;  
+    var length = game.nrTilesY*tileSize; 
+    var width = game.nrTilesX*tileSize; 
+    var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
+    game.world.setBounds(0, 0, length*2-4*tileSize, worldWidth*2-4*tileSize);
+
+    // Isometric
+    game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
+}
+
+function loadAssets(game){
+    game.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
+    game.load.spritesheet('EnemyBatSprite', '../Res/Images/SpriteSheet/EnemyBat.png', 272, 282, 28);
+    game.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
+    game.load.spritesheet('Shield', '../Res/Images/SpriteSheet/Shield.png', 201,100, 8); 
+    game.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
+    game.load.image('EnergyBar', '../Res/Images/SpriteSheet/energyBar.png');
+    game.load.image('Hud', '../Res/Images/SpriteSheet/Hud.png');
+    game.load.image('QButton', '../Res/Images/SpriteSheet/QButton.png');
+    game.load.image('QButtonPressed', '../Res/Images/SpriteSheet/QButtonPressed.png');
+    game.load.image('WButton', '../Res/Images/SpriteSheet/WButton.png');
+    game.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
+    game.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
+    // Load map tiles
+    game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
+}
+
 
 /*
  * Create the player

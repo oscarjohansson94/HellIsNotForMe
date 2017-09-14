@@ -1,43 +1,12 @@
 var test_state = {
-    map: map02,
-    nrTilesX: 0,
-    nrTilesY: 0,
     bitmapData : null,
     bitmapDataBrush : null,
     keyQ: null,
     keyW: null,
     preload: function() {
-        // Load sprite sheet containing all player movements
-        this.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
-        this.load.spritesheet('EnemyBatSprite', '../Res/Images/SpriteSheet/EnemyBat.png', 272, 282, 28);
-        this.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
-        this.load.spritesheet('Shield', '../Res/Images/SpriteSheet/Shield.png', 201,100, 8); 
-        this.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
-        this.load.image('EnergyBar', '../Res/Images/SpriteSheet/energyBar.png');
-        this.load.image('Hud', '../Res/Images/SpriteSheet/Hud.png');
-        this.load.image('QButton', '../Res/Images/SpriteSheet/QButton.png');
-        this.load.image('QButtonPressed', '../Res/Images/SpriteSheet/QButtonPressed.png');
-        this.load.image('WButton', '../Res/Images/SpriteSheet/WButton.png');
-        this.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
-        this.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
-
-        // Load map tiles
-        game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
-
-        game.time.advancedTiming = true;
-        game.plugins.add(new Phaser.Plugin.Isometric(game));
-        game.iso.anchor.set(0.5, 0);
-
-        // Increase world size
-        this.nrTilesX = this.map.tiles[0].length; 
-        this.nrTilesY = this.map.tiles.length;  
-        var length = this.nrTilesY*tileSize; 
-        var width = this.nrTilesX*tileSize; 
-        var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
-        game.world.setBounds(0, 0, length*2-4*tileSize, worldWidth*2-4*tileSize);
-
-        // Isometric
-        game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
+        game.map = map02; // Change this to change map
+        loadAssets(game);
+        preloadGame(game);
     },
     create: function() {
         // Set gravity
@@ -70,16 +39,16 @@ var test_state = {
         this.bitmapDataBrush.circle(2, 2, 2, 'rgba(24,234,236,1)');
 
         // Generate map
-        for( var y = 1; y < this.nrTilesY - 1; y++) {
-            for(var x = 1; x < this.nrTilesX - 1; x++){
+        for( var y = 1; y < game.nrTilesY - 1; y++) {
+            for(var x = 1; x < game.nrTilesX - 1; x++){
                 // Generate tile
-                var tileType = this.map.tiles[y][x];
+                var tileType = game.map.tiles[y][x];
                 var tile;
                 if(tileType == tileEnum.FLOOR01) {
-                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.tiles[y][x] - 1, floorGroup);
+                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', game.map.tiles[y][x] - 1, floorGroup);
                     tile.anchor.set(0.5,1);
                 } else if(tileType == tileEnum.LAVA) {
-                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', this.map.tiles[y][x] - 1, liquidGroup);
+                    tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', game.map.tiles[y][x] - 1, liquidGroup);
                     tile.isoZ += 6;
                     liquidGroup.add(tile);
                     game.physics.isoArcade.enable(tile);
@@ -100,7 +69,7 @@ var test_state = {
                 }
 
                 //Generate enemy{
-                var enemyType = this.map.enemies[y][x];
+                var enemyType = game.map.enemies[y][x];
                 var enemy;
                 if(enemyType == enemyEnum.BAT) {
                     enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, enemyGroup);
@@ -117,7 +86,7 @@ var test_state = {
         }
 
         // Create player
-        player = game.add.isoSprite(this.map.start.x * tileSize,this.map.start.y * tileSize,0, 'PlayerSprite',0);
+        player = game.add.isoSprite(game.map.start.x * tileSize,game.map.start.y * tileSize,0, 'PlayerSprite',0);
         createPlayer(player);
 
         // Camera should follow player
@@ -133,10 +102,10 @@ var test_state = {
         // Buttons
         createButtons(game, hudGroup,scale);
 
-            },
+    },
     update: function() {
-        
-        player.update(this.map);
+
+        player.update(game.map);
 
         updateLiquid(liquidGroup);
 
@@ -219,7 +188,7 @@ var test_state = {
         game.world.bringToTop(player);
         game.world.bringToTop(hudGroup);
         game.world.bringToTop(abilityGroup);
-        
+
         player.endOfFrame();
     },
     render: function () {
@@ -234,6 +203,6 @@ var test_state = {
     fadeComplete: function(){
         game.state.restart();
     },
-   
+
 
 };
