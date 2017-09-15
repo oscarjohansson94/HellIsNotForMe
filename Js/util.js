@@ -161,8 +161,9 @@ function createGame(game) {
     game.abilityGroup = game.add.group();
     // Scale deping on game size
     game.scaleFactor = game.width / 1280;
-
-
+    game.buttons =  [{unpressed: null, pressed: null},{unpressed: null, pressed: null},{unpressed: null, pressed: null},{unpressed: null, pressed: null}];
+    game.buttonPosition = [{x: 22*game.scaleFactor,y:game.height - 109*game.scaleFactor},{x:140*game.scaleFactor ,y:game.height - 109*game.scaleFactor},{x: 254*game.scaleFactor ,y: game.height - 109*game.scaleFactor},{x: 369*game.scaleFactor  ,y: game.height - 109*game.scaleFactor}];
+    game.buttonNames = ['Q','W','',''];
 }
 
 function createBitmap(game) {
@@ -331,7 +332,7 @@ function createPlayer(player) {
         if(game.showRadius) {
             player.reduceEnergy(1);
             if(player.energy <= 0){
-                QbuttonUp();
+               ButtonUp(game, 0);
             }
         } 
     }
@@ -342,7 +343,7 @@ function createPlayer(player) {
             player.Shield.body.y = player.body.y ;
             player.Shield.body.z = player.body.z + 25;
             if(player.energy <= 0) {
-                WbuttonUp();
+                ButtonUp(game,0);
             }
         }
 
@@ -467,32 +468,25 @@ function createFire(game){
  * This should be handld differently
  * TODO
  */
-function QbuttonDown(){ 
-    if(game.QButton != null && game.QButtonPressed != null){
+
+function ButtonDown(game, index) {
+    console.log("pressing button", index);
+    game.buttons[index].pressed.visible = true;
+    game.buttons[index].unpressed.visible = false;
+    if(index == 0) {
         game.showRadius = true;
-        game.QButton.visible = false;
-        game.QButtonPressed.visible = true;
-    }
-}
-function QbuttonUp() {
-    if(game.QButton != null && game.QButtonPressed != null){
-        game.showRadius = false;
-        game.QButton.visible = true;
-        game.QButtonPressed.visible = false;
-    }
-}
-function WbuttonDown(){ 
-    if(game.WButton != null && game.WButtonPressed != null){
+    } else if(index == 1) {
         game.player.Shield.visible = true;
         game.player.Shield.animations.play('Start', 28, true);
-        game.WButton.visible = false;
-        game.WButtonPressed.visible = true;
     }
 }
-function WbuttonUp() {
-    if(game.WButton != null && game.WButtonPressed != null){
-        game.WButton.visible = true;
-        game.WButtonPressed.visible = false;
+
+function ButtonUp(game, index) {
+    game.buttons[index].pressed.visible = false;
+    game.buttons[index].unpressed.visible = true;
+    if(index == 0) {
+        game.showRadius = false;
+    } else if(index == 1) {
         game.player.Shield.animations.play('End', 28, true);
     }
 }
@@ -524,54 +518,47 @@ function createHud(game) {
 }
 
 function createButtons(game) {
-    if(game.buttons.q) {
-        game.QButton = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'QButton');
-        game.QButton.fixedToCamera = true;
-        game.QButton.cropEnabled = true;
-        game.QButton.scale.setTo(game.scaleFactor, game.scaleFactor);
-        game.QButtonPressed = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'QButtonPressed');
-        game.QButtonPressed.fixedToCamera = true;
-        game.QButtonPressed.cropEnabled = true;
-        game.QButtonPressed.scale.setTo(game.scaleFactor, game.scaleFactor);
-        game.QButtonPressed.visible = false;
-        game.hudGroup.add(game.QButton);
-        game.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
-        game.keyQ.onDown.add(QbuttonDown,this);
-        game.keyQ.onUp.add(QbuttonUp,this);
-
-        game.hudGroup.add(game.QButtonPressed);
-    } else {
-        game.QButton = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'ButtonLocked');
-        game.QButton.fixedToCamera = true;
-        game.QButton.cropEnabled = true;
-        game.QButton.scale.setTo(game.scaleFactor, game.scaleFactor);
-        game.hudGroup.add(game.QButton);
-    }
-
-    if(game.buttons.w) {
-        game.WButton = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'WButton');
-        game.WButton.fixedToCamera = true;
-        game.WButton.cropEnabled = true;
-        game.WButton.scale.setTo(game.scaleFactor, game.scaleFactor);
-        game.WButtonPressed = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'WButtonPressed');
-        game.WButtonPressed.fixedToCamera = true;
-        game.WButtonPressed.cropEnabled = true;
-        game.WButtonPressed.scale.setTo(game.scaleFactor, game.scaleFactor);
-        game.WButtonPressed.visible = false;
-        game.hudGroup.add(game.WButton);
-        game.hudGroup.add(game.WButtonPressed);
-        game.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
-        game.keyW.onDown.add(WbuttonDown,this);
-        game.keyW.onUp.add(WbuttonUp,this);
+    for(var i = 0; i < 4; i++) {
+        if(game.buttonState[i]){
+            console.log("Create button", game.buttonNames[i]);
+            var pressed = game.add.image(game.buttonPosition[i].x,game.buttonPosition[i].y, game.buttonNames[i] + 'ButtonPressed');
+            var unpressed = game.add.image(game.buttonPosition[i].x,game.buttonPosition[i].y, game.buttonNames[i] + 'Button');
+            pressed.fixedToCamera = true;
+            unpressed.fixedToCamera = true;
+            pressed.cropEnabled = true;
+            unpressed.cropEnabled = true;
+            pressed.scale.setTo(game.scaleFactor, game.scaleFactor);
+            unpressed.scale.setTo(game.scaleFactor, game.scaleFactor);
+            pressed.visible = false;
+            game.buttons[i].pressed = pressed;
+            game.buttons[i].unpressed = unpressed;
+            game.hudGroup.add(game.buttons[i].pressed);
+            game.hudGroup.add(game.buttons[i].unpressed);
+            if(game.buttonNames[i] == 'Q') {
+                console.log("add key Q", i);
+                game.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
+                game.keyQ.onDown.add(function() {ButtonDown(game, 0);}, this);
+                game.keyQ.onUp.add(function() {ButtonUp(game, 0);},this);
+            } else if(game.buttonNames[i] == 'W') {
+                console.log("add keyW");
+                game.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
+                game.keyW.onDown.add(function(){ButtonDown(game,1);},this);
+                game.keyW.onUp.add(function(){ButtonUp(game,1);},this);
+            } else if(game.buttonNames[i] == 'E') {
+            } else if(game.buttonNames[i] == 'R') {
+            }
 
 
-    } else {
-        game.WButton = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'ButtonLocked');
-        game.WButton.fixedToCamera = true;
-        game.WButton.cropEnabled = true;
-        game.WButton.scale.setTo(game.scaleFactor, game.scaleFactor);
-        game.hudGroup.add(game.WButton);
-    }
+        } else {
+            console.log("Create locked button at:", game.buttonPosition[i].x, game.buttonPosition[i].y);
+            var locked = game.add.image(game.buttonPosition[i].x,game.buttonPosition[i].y, 'ButtonLocked');
+            locked.fixedToCamera = true;
+            locked.cropEnabled = true;
+            locked.scale.setTo(game.scaleFactor, game.scaleFactor);
+            game.buttons[i].unpressed = locked;
+            game.hudGroup.add(game.buttons[i].unpressed);
+        }
+    }    
 }
 
 // Make the liquids move "naturally"
@@ -652,14 +639,31 @@ function clear(game) {
     game.walkingGroup.destroy();
     game.flyingGroup.destroy();
     game.abilityGroup.destroy();
-    game.buttons = null;
-    if(game.QButton)
-        game.QButton.destroy();
-    if(game.QButtonPressed)
-        game.QButtonPressed.destroy();
-    if(game.WButtonPressed)
-        game.WButtonPressed.destroy();
-    if(game.WButton)
-        game.WButton.destroy();
+    game.buttonState = null;
+    for(var  i = 0; i < game.buttons.length; i++) {
+        if(game.buttons[i].pressed)
+            game.buttons[i].pressed.destroy();
+        else
+            game.buttons[i].pressed = null;
+        if(game.buttons[i].unpressed)
+            game.buttons[i].unpressed.destroy();
+        else
+            game.buttons[i].unpressed = null;
+        game.buttons[i] = null;
+        game.buttonPosition[i].x = null;
+        game.buttonPosition[i].y = null;
+        game.buttonPosition[i] = null;
+    }
+    game.buttonNames = null;
+    if(game.keyQ)
+        game.keyQ = null;
+    if(game.keyW)
+        game.keyW = null;
+    if(game.keyE)
+        game.keyE = null;
+    if(game.keyR)
+        game.keyR = null;
+
+
     game.map = null;
 }
