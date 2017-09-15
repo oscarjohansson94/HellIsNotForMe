@@ -64,7 +64,8 @@ function updateState(game) {
         game.physics.isoArcade.collide(b,game.player);
     });
     game.physics.isoArcade.collide(game.stair, game.player, function() {
-        game.state.start(game.nextState);
+        game.camera.fade('#000000');
+        game.camera.onFadeComplete.add(function () {nextLevel(game)},this);
     })
     sortGame(game);
     game.player.endOfFrame();
@@ -149,15 +150,6 @@ function createGame(game) {
 
     // Set background color
     game.stage.backgroundColor = "#000000";
-
-    game.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
-    game.keyQ.onDown.add(QbuttonDown,this);
-    game.keyQ.onUp.add(QbuttonUp,this);
-
-    game.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
-    game.keyW.onDown.add(WbuttonDown,this);
-    game.keyW.onUp.add(WbuttonUp,this);
-
     // Create groups
     game.floorGroup = game.add.group();
     game.enemyGroup = game.add.group(); 
@@ -174,7 +166,7 @@ function createGame(game) {
 }
 
 function createBitmap(game) {
-    game.bitmapData = game.make.bitmapData(3000, 3000);
+    game.bitmapData = game.make.bitmapData(game.width*2, game.height*2);
     game.bitmapData.addToWorld();
     game.bitmapDataBrush = game.make.bitmapData(32, 32);
     game.bitmapDataBrush.circle(2, 2, 2, 'rgba(24,234,236,1)');
@@ -212,6 +204,7 @@ function loadAssets(game){
     game.load.image('WButton', '../Res/Images/SpriteSheet/WButton.png');
     game.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
     game.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
+    game.load.image('ButtonLocked', '../Res/Images/SpriteSheet/ButtonLocked.png');
     // Load map tiles
     game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
 }
@@ -359,7 +352,7 @@ function createPlayer(player) {
         // Die
         if(player.health <= 0){
             game.camera.fade('#000000');
-            game.camera.onFadeComplete.add(function () {fadeComplete(game)},this);
+            game.camera.onFadeComplete.add(function () {die(game)},this);
         }
     }
 
@@ -531,28 +524,54 @@ function createHud(game) {
 }
 
 function createButtons(game) {
-    game.QButton = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'QButton');
-    game.QButton.fixedToCamera = true;
-    game.QButton.cropEnabled = true;
-    game.QButton.scale.setTo(game.scaleFactor, game.scaleFactor);
-    game.QButtonPressed = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'QButtonPressed');
-    game.QButtonPressed.fixedToCamera = true;
-    game.QButtonPressed.cropEnabled = true;
-    game.QButtonPressed.scale.setTo(game.scaleFactor, game.scaleFactor);
-    game.QButtonPressed.visible = false;
-    game.hudGroup.add(game.QButton);
-    game.hudGroup.add(game.QButtonPressed);
-    game.WButton = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'WButton');
-    game.WButton.fixedToCamera = true;
-    game.WButton.cropEnabled = true;
-    game.WButton.scale.setTo(game.scaleFactor, game.scaleFactor);
-    game.WButtonPressed = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'WButtonPressed');
-    game.WButtonPressed.fixedToCamera = true;
-    game.WButtonPressed.cropEnabled = true;
-    game.WButtonPressed.scale.setTo(game.scaleFactor, game.scaleFactor);
-    game.WButtonPressed.visible = false;
-    game.hudGroup.add(game.WButton);
-    game.hudGroup.add(game.WButtonPressed);
+    if(game.buttons.q) {
+        game.QButton = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'QButton');
+        game.QButton.fixedToCamera = true;
+        game.QButton.cropEnabled = true;
+        game.QButton.scale.setTo(game.scaleFactor, game.scaleFactor);
+        game.QButtonPressed = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'QButtonPressed');
+        game.QButtonPressed.fixedToCamera = true;
+        game.QButtonPressed.cropEnabled = true;
+        game.QButtonPressed.scale.setTo(game.scaleFactor, game.scaleFactor);
+        game.QButtonPressed.visible = false;
+        game.hudGroup.add(game.QButton);
+        game.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
+        game.keyQ.onDown.add(QbuttonDown,this);
+        game.keyQ.onUp.add(QbuttonUp,this);
+
+        game.hudGroup.add(game.QButtonPressed);
+    } else {
+        game.QButton = game.add.image(22*game.scaleFactor, game.height - 109*game.scaleFactor, 'ButtonLocked');
+        game.QButton.fixedToCamera = true;
+        game.QButton.cropEnabled = true;
+        game.QButton.scale.setTo(game.scaleFactor, game.scaleFactor);
+        game.hudGroup.add(game.QButton);
+    }
+
+    if(game.buttons.w) {
+        game.WButton = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'WButton');
+        game.WButton.fixedToCamera = true;
+        game.WButton.cropEnabled = true;
+        game.WButton.scale.setTo(game.scaleFactor, game.scaleFactor);
+        game.WButtonPressed = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'WButtonPressed');
+        game.WButtonPressed.fixedToCamera = true;
+        game.WButtonPressed.cropEnabled = true;
+        game.WButtonPressed.scale.setTo(game.scaleFactor, game.scaleFactor);
+        game.WButtonPressed.visible = false;
+        game.hudGroup.add(game.WButton);
+        game.hudGroup.add(game.WButtonPressed);
+        game.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
+        game.keyW.onDown.add(WbuttonDown,this);
+        game.keyW.onUp.add(WbuttonUp,this);
+
+
+    } else {
+        game.WButton = game.add.image(140*game.scaleFactor, game.height - 109*game.scaleFactor, 'ButtonLocked');
+        game.WButton.fixedToCamera = true;
+        game.WButton.cropEnabled = true;
+        game.WButton.scale.setTo(game.scaleFactor, game.scaleFactor);
+        game.hudGroup.add(game.WButton);
+    }
 }
 
 // Make the liquids move "naturally"
@@ -564,16 +583,7 @@ function updateLiquid(liquidGroup) {
 }
 
 
-
-/* 
- * Gets called when camera fade is complete
- * Only happens on death, right now
- * If not extended, rename
- * TODO
- */
-function fadeComplete(game){
-    game.bitmapData.destroy;
-    game.bitmapDataBrush.destroy();
+function die(game){
     game.state.restart();
 }
 
@@ -622,6 +632,10 @@ function updateEnemies(game) {
     }
 }
 
+function nextLevel(game) {
+    game.state.start(game.nextState);
+}
+
 function clear(game) {
     game.bitmapData.destroy();
     game.bitmapDataBrush.destroy();
@@ -638,5 +652,14 @@ function clear(game) {
     game.walkingGroup.destroy();
     game.flyingGroup.destroy();
     game.abilityGroup.destroy();
+    game.buttons = null;
+    if(game.QButton)
+        game.QButton.destroy();
+    if(game.QButtonPressed)
+        game.QButtonPressed.destroy();
+    if(game.WButtonPressed)
+        game.WButtonPressed.destroy();
+    if(game.WButton)
+        game.WButton.destroy();
     game.map = null;
 }
