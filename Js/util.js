@@ -1,5 +1,5 @@
-animationSpeed = 7;
-showDebug = true;
+var animationSpeed = 7;
+var showDebug = false;
 
 function debug(game, player){
     if(showDebug){
@@ -64,7 +64,7 @@ function updateState(game) {
         game.physics.isoArcade.collide(b,game.player);
     });
     game.physics.isoArcade.collide(game.stair, game.player, function() {
-    console.log("CLIMB THE STAIR");
+        game.state.start(game.nextState);
     })
     sortGame(game);
     game.player.endOfFrame();
@@ -572,6 +572,8 @@ function updateLiquid(liquidGroup) {
  * TODO
  */
 function fadeComplete(game){
+    game.bitmapData.destroy;
+    game.bitmapDataBrush.destroy();
     game.state.restart();
 }
 
@@ -620,3 +622,21 @@ function updateEnemies(game) {
     }
 }
 
+function clear(game) {
+    game.bitmapData.destroy();
+    game.bitmapDataBrush.destroy();
+    if(game.player.shield)
+        game.player.shield.destroy();
+    if(game.player.fire)
+        game.player.fire.destroy();
+    game.player.destroy();
+    game.floorGroup.destroy();
+    game.enemyGroup.destroy();
+    game.liquidGroup.destroy();
+    game.hudGroup.destroy();
+    game.obstacleGroup.destroy();
+    game.walkingGroup.destroy();
+    game.flyingGroup.destroy();
+    game.abilityGroup.destroy();
+    game.map = null;
+}
