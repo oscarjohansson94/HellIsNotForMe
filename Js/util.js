@@ -45,6 +45,7 @@ function createState(game) {
 
     // Buttons
     createButtons(game, game.hudGroup);
+    createText(game);
 }
 
 function updateState(game) {
@@ -142,6 +143,22 @@ function generateMap(game) {
     }
 }
 
+function createText(game) {
+    var style = { font: "30px Arial Black", fill: "#ffffff", align: "center", fontWeight: 'bold', stroke: '#000000', strokeThickness: 6 };
+    var style2 = { font: "18px Arial Black", fill: "#ffffff", align: "center", fontWeight: 'bold', stroke: '#000000', strokeThickness: 6 };
+    
+    game.textTitle = game.add.text(game.width / 2, game.height*0.1, game.levelTitleText, style);
+    game.textTitle.anchor.set(0.5);
+    game.textTitle.alpha = 1.0;
+    game.textTitle.fixedToCamera = true;
+    game.textUnderTitle = game.add.text(game.width / 2, game.height*0.1 + 30, game.levelUnderTitleText, style2);
+    game.textUnderTitle.anchor.set(0.5);
+    game.textUnderTitle.alpha = 1.0;
+    game.textUnderTitle.fixedToCamera = true;
+
+    game.add.tween(game.textTitle).to( { alpha: 0.0 }, 500, "Linear", true, 2000);
+    game.add.tween(game.textUnderTitle).to( { alpha: 0.0 }, 500, "Linear", true, 2000);
+}
 
 
 function createGame(game) {
@@ -470,7 +487,6 @@ function createFire(game){
  */
 
 function ButtonDown(game, index) {
-    console.log("pressing button", index);
     game.buttons[index].pressed.visible = true;
     game.buttons[index].unpressed.visible = false;
     if(index == 0) {
@@ -520,7 +536,6 @@ function createHud(game) {
 function createButtons(game) {
     for(var i = 0; i < 4; i++) {
         if(game.buttonState[i]){
-            console.log("Create button", game.buttonNames[i]);
             var pressed = game.add.image(game.buttonPosition[i].x,game.buttonPosition[i].y, game.buttonNames[i] + 'ButtonPressed');
             var unpressed = game.add.image(game.buttonPosition[i].x,game.buttonPosition[i].y, game.buttonNames[i] + 'Button');
             pressed.fixedToCamera = true;
@@ -535,12 +550,10 @@ function createButtons(game) {
             game.hudGroup.add(game.buttons[i].pressed);
             game.hudGroup.add(game.buttons[i].unpressed);
             if(game.buttonNames[i] == 'Q') {
-                console.log("add key Q", i);
                 game.keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
                 game.keyQ.onDown.add(function() {ButtonDown(game, 0);}, this);
                 game.keyQ.onUp.add(function() {ButtonUp(game, 0);},this);
             } else if(game.buttonNames[i] == 'W') {
-                console.log("add keyW");
                 game.keyW = game.input.keyboard.addKey(Phaser.Keyboard.W);
                 game.keyW.onDown.add(function(){ButtonDown(game,1);},this);
                 game.keyW.onUp.add(function(){ButtonUp(game,1);},this);
@@ -550,7 +563,6 @@ function createButtons(game) {
 
 
         } else {
-            console.log("Create locked button at:", game.buttonPosition[i].x, game.buttonPosition[i].y);
             var locked = game.add.image(game.buttonPosition[i].x,game.buttonPosition[i].y, 'ButtonLocked');
             locked.fixedToCamera = true;
             locked.cropEnabled = true;
@@ -640,6 +652,8 @@ function clear(game) {
     game.flyingGroup.destroy();
     game.abilityGroup.destroy();
     game.buttonState = null;
+    game.textTitle.destroy();
+    game.textUnderTitle.destroy();
     for(var  i = 0; i < game.buttons.length; i++) {
         if(game.buttons[i].pressed)
             game.buttons[i].pressed.destroy();
