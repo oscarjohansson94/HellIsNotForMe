@@ -1,13 +1,13 @@
 var animationSpeed = 7;
-var showDebug = false;
+var showDebug = true;
 
 function debug(game, player){
     if(showDebug){
         game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
         game.obstacleGroup.forEach(function(tile){
-            game.debug.body(tile, 'rgba(189, 221, 235, 0.6)', false);
+            game.debug.body(tile, 'rgba(0, 255, 0, 0.9)', false);
         });
-        game.debug.body(game.stair, 'rgba(189, 221, 235, 0.6)', false);
+        game.debug.body(game.stair, 'rgba(255, 0, 0, 0.6)', false);
     }
 }
 

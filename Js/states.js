@@ -45,10 +45,32 @@ var state_level2 = {
 var state_level3 = {
     preload: function() {
         game.map = map03; // Change this to change map
-        game.nextState = 'state_level1';
+        game.nextState = 'state_level4';
         game.buttonState = [false, false, false, false];
         game.levelTitleText = '03 - Your first encounter';
         game.levelUnderTitleText = 'How does my hair look?';
+        preloadState(game);
+    },
+    create: function() {
+        createState(game);
+    },
+    update: function() {
+        updateState(game);
+    },
+    shutdown: function() {
+        clear(game);
+    },
+    render: function () {
+        renderState(game);
+    }
+};
+var state_level4 = {
+    preload: function() {
+        game.map = map04; // Change this to change map
+        game.nextState = 'state_level1';
+        game.buttonState = [false, false, false, false];
+        game.levelTitleText = '04 - Don\'t fall off the edge';
+        game.levelUnderTitleText = 'Just kidding';
         preloadState(game);
     },
     create: function() {
