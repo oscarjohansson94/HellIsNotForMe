@@ -506,24 +506,27 @@ function createFire(game){
  */
 
 function ButtonDown(game, index) {
-    game.buttons[index].pressed.visible = true;
-    game.buttons[index].unpressed.visible = false;
-    if(index == 0) {
-        game.showRadius = true;
-    } else if(index == 1) {
-        game.player.Shield.visible = true;
-        game.player.Shield.animations.play('Start', 28, true);
+    if(!game.paused) {
+        game.buttons[index].pressed.visible = true;
+        game.buttons[index].unpressed.visible = false;
+        if(index == 0) {
+            game.showRadius = true;
+        } else if(index == 1) {
+            game.player.Shield.visible = true;
+            game.player.Shield.animations.play('Start', 28, true);
+        }
     }
 }
 
 function ButtonUp(game, index) {
-    console.log(index)
-    game.buttons[index].pressed.visible = false;
-    game.buttons[index].unpressed.visible = true;
-    if(index == 0) {
-        game.showRadius = false;
-    } else if(index == 1) {
-        game.player.Shield.animations.play('End', 28, true);
+    if(!game.paused) {
+        game.buttons[index].pressed.visible = false;
+        game.buttons[index].unpressed.visible = true;
+        if(index == 0) {
+            game.showRadius = false;
+        } else if(index == 1) {
+            game.player.Shield.animations.play('End', 28, true);
+        }
     }
 }
 
@@ -553,7 +556,14 @@ function createHud(game) {
     game.hudGroup.add(game.energyBar);
 }
 
+function pause(game) {
+    if(game.paused == false) game.paused = true;
+    else game.paused = false;
+}
+
 function createButtons(game) {
+    game.keyP = game.input.keyboard.addKey(Phaser.Keyboard.P);
+    game.keyP.onDown.add(function() {pause(game)}, this);
     for(var i = 0; i < 4; i++) {
         if(game.buttonState[i]){
             var pressed = game.add.image(game.buttonPosition[i].x,game.buttonPosition[i].y, game.buttonNames[i] + 'ButtonPressed');
@@ -580,6 +590,7 @@ function createButtons(game) {
             } else if(game.buttonNames[i] == 'E') {
             } else if(game.buttonNames[i] == 'R') {
             }
+
 
 
         } else {
@@ -699,6 +710,7 @@ function clear(game) {
         game.keyE = null;
     if(game.keyR)
         game.keyR = null;
+    game.keyP = null;
 
 
     game.map = null;
