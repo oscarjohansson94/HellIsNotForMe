@@ -8,6 +8,8 @@ function debug(game, player){
             game.debug.body(tile, 'rgba(0, 255, 0, 0.9)', false);
         });
         game.debug.body(game.stair, 'rgba(255, 0, 0, 0.6)', false);
+        if(game.player.target) 
+            game.debug.body(game.player.target, 'rgba(255, 0, 0, 0.6)', false);
     }
 }
 
@@ -146,7 +148,7 @@ function generateMap(game) {
 function createText(game) {
     var style = { font: "30px Arial Black", fill: "#ffffff", align: "center", fontWeight: 'bold', stroke: '#000000', strokeThickness: 6 };
     var style2 = { font: "18px Arial Black", fill: "#ffffff", align: "center", fontWeight: 'bold', stroke: '#000000', strokeThickness: 6 };
-    
+
     game.textTitle = game.add.text(game.width / 2, game.height*0.1, game.levelTitleText, style);
     game.textTitle.anchor.set(0.5);
     game.textTitle.alpha = 1.0;
@@ -263,14 +265,17 @@ function createPlayer(player) {
     player.shield = false;
     player.burning = false;
     player.fire = null;
-    player.minTargetDistance = 10;
-    player.target =  null;
     player.damage = 0;
     player.angleToTarget = 0;
     player.energyDrain = 0;
-
-    // Create target
-    player.target = new Phaser.Plugin.Isometric.Point3();
+    player.targetReached = false;
+    player.target = game.add.isoSprite(0, 0,0, '', 0);
+    player.target.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
+    game.physics.isoArcade.enable(player.target);
+    player.target.body.immovable = true;
+    player.target.body.collideWorldBounds = true;
+    player.target.anchor.set(0.5, 0.5, 0.5);
+    player.target.body.setSize(10,10, 10);
 
     // EnergyShield
     player.Shield = game.add.isoSprite(0, 0,0,'Shield',0);
@@ -321,19 +326,27 @@ function createPlayer(player) {
     player.updateMove = function(){
 
         // Get angle between pointer and player
-        player.angleToTarget = Math.atan2(player.target.y - player.body.y, player.target.x - player.body.x);
 
-        if(game.input.activePointer.isDown){
-            game.iso.unproject(game.input.activePointer.position, player.target);
-            player.moving = true;
+        if(player.target.body)
+            player.angleToTarget = Math.atan2(player.target.body.y - player.body.y, player.target.body.x - player.body.x);
+        if(game.input.activePointer.isDown) {
+            var out = {x: 0, y: 0};
+            game.iso.unproject(game.input.activePointer.position, out);
+            if(getTile(out.x, out.y, game.map) != 0 && getTile(out.x, out.y, game.map) != 3) {
+                player.target.body.x = out.x;
+                player.target.body.y = out.y;
+                player.moving = true;
+            }
+
         }
         if(player.moving) {
-            player.distanceToTarget = Math.sqrt(Math.pow(player.target.x - player.body.x, 2)+ Math.pow(player.target.y - player.body.y, 2));
-            if(player.distanceToTarget <= player.minTargetDistance){
+            game.physics.isoArcade.collide(player,player.target, function() {player.targetReached = true;});
+            if(player.targetReached){
                 player.moving = false;
                 player.body.velocity.x = 0;
                 player.body.velocity.y = 0;
                 player.animations.play('IdlePlayer' + getAnimationDirection(player.angleToTarget), animationSpeed, true);
+                player.targetReached = false;
             } else { 
                 player.animations.play('RunPlayer' + getAnimationDirection(player.angleToTarget), animationSpeed, true);
                 player.body.velocity.x = Math.cos(player.angleToTarget) * player.speed;
@@ -349,7 +362,7 @@ function createPlayer(player) {
         if(game.showRadius) {
             player.reduceEnergy(1);
             if(player.energy <= 0){
-               ButtonUp(game, 0);
+                ButtonUp(game, 0);
             }
         } 
     }
@@ -462,7 +475,13 @@ function getAnimationDirection(angle) {
  * int
  */
 function getTile(x, y, map) {
-    return map.tiles[Math.ceil(y/tileSize - 0.5)+1][Math.ceil(x /tileSize  - 0.5)+1];
+    var xx = Math.ceil(x /tileSize  - 0.5)+1;
+    var yy = Math.ceil(y/tileSize - 0.5)+1;
+    if(yy >= 0 && yy < map.tiles.length && xx >= 0 && xx < map.tiles[0].length) {
+        return map.tiles[yy][xx];
+    } else {
+        return 0;
+    }
 }
 
 
@@ -498,6 +517,7 @@ function ButtonDown(game, index) {
 }
 
 function ButtonUp(game, index) {
+    console.log(index)
     game.buttons[index].pressed.visible = false;
     game.buttons[index].unpressed.visible = true;
     if(index == 0) {
@@ -642,6 +662,8 @@ function clear(game) {
         game.player.shield.destroy();
     if(game.player.fire)
         game.player.fire.destroy();
+    if(game.player.target) 
+        game.player.target.destroy();
     game.player.destroy();
     game.floorGroup.destroy();
     game.enemyGroup.destroy();
