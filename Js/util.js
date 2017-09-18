@@ -98,7 +98,7 @@ function updateState(game) {
     updateEnemies(game);
     // Check for border collision
     game.obstacleGroup.forEach(function(b) {
-        game.physics.isoArcade.collide(b,game.player, function() {game.player.targetReached = true;});
+        game.physics.isoArcade.collide(b,game.player);
     });
     game.physics.isoArcade.collide(game.stair, game.player, function() {
         game.camera.fade('#000000');
@@ -378,7 +378,7 @@ function createPlayer(player) {
 
         }
         if(player.moving) {
-            game.physics.isoArcade.collide(player,player.target, function() {player.targetReached = true;});
+            game.physics.isoArcade.overlap(player,player.target, function() {player.targetReached = true;});
             if(player.targetReached){
                 player.moving = false;
                 player.body.velocity.x = 0;
