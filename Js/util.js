@@ -16,15 +16,16 @@ function debug(game, player){
 
 tileEnum = {
     EMPTY: 0,
-    FLOOR01: 1,
-    LAVA: 2,
-    BORDER: 3
+    BORDER: 1,
+    FLOOR01: 3,
+    LAVA: 4
 }
 
-enemyEnum = {
+objectEnum = {
     EMPTY: 0,
-    BAT: 1,
-    STAIR: 2
+    BAT: 2,
+    PLAYER: 5,
+    STAIR: 6
 }
 
 
@@ -39,12 +40,14 @@ function redrawMap(game) {
         for(var y = game.lastPlayerPos.ys; y <= game.lastPlayerPos.ye; y++) {
             for(var x = game.lastPlayerPos.xs; x <= game.lastPlayerPos.xe; x++) {
                 if(game.tiles[y] && game.tiles[y][x])
-                game.tiles[y][x].visible = false;
+                    game.tiles[y][x].destroy();
             }
         }
     }
     out.x = Math.ceil(game.player.body.x /tileSize  - 1)+1;
     out.y = Math.ceil(game.player.body.y/tileSize - 1)+1;
+    var nrTilesX = game.map.layers[0].width;
+    var nrTilesY = game.map.layers[0].height;
     var dist = 18;
     var xstart = Math.round(Math.max(1,out.x - dist));
     var ystart = Math.round(Math.max(1, out.y - dist));
@@ -52,13 +55,19 @@ function redrawMap(game) {
     var yend = Math.round(Math.min(game.nrTilesY-1, out.y + dist));
     for(var y = ystart; y <= yend; y++) {
         for(var x = xstart; x <= xend; x++) {
-            if(game.tiles[y] && game.tiles[y][x]){
-                game.tiles[y][x].visible = true;
+            if(game.tiles[y])
+            game.tiles[y][x] = createTile(x,y,game);
+            if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BAT) {
+                game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
+                enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, game.enemyGroup);
+                enemy.radiusStart = 0;
+                createBat(enemy);
+                game.flyingGroup.add(enemy);
+                game.enemyGroup.add(enemy);
             }
         }
     }
     game.lastPlayerPos = {ys: ystart, ye: yend, xs: xstart, xe: xend};
-
 }
 
 function createState(game) {
@@ -68,23 +77,17 @@ function createState(game) {
 
 
     // Create player
-    game.player = game.add.isoSprite(game.map.start.x * tileSize,game.map.start.y * tileSize,0, 'PlayerSprite',0);
-    createPlayer(game.player);
 
-    // Camera should follow player
-    game.camera.x = game.player.body.x;
-    game.camera.y = game.player.body.y;
-    game.camera.follow(game.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
     //Hud
     createHud(game,game.hudGroup);
 
     // Buttons
     createButtons(game, game.hudGroup);
     createText(game);
-    redrawMap(game);
 }
 
 function updateState(game) {
+
     game.player.update(game);
     updateLiquid(game.liquidGroup);
 
@@ -125,52 +128,52 @@ function sortGame(game) {
 }
 
 
+function createTile(x, y, game) {
+    var tile;
+    var height = game.map.layers[0].height;
+    var tileType = game.map.layers[0].data[y*height + x];
+    if(tileType == tileEnum.FLOOR01) {
+        tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tiles', tileType-1, game.floorGroup);
+        tile.anchor.set(0.5,1);
+    } else if(tileType == tileEnum.LAVA) {
+        tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tiles', tileType-1, game.liquidGroup);
+        tile.isoZ += 6;
+        game.liquidGroup.add(tile);
+        game.physics.isoArcade.enable(tile);
+        tile.body.collideWorldBounds = true;
+        tile.anchor.set(0.5,1, 0);
+        tile.body.immovable = true;
+    } else if(tileType == tileEnum.BORDER){
+        tile = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,null, 0, game.obstacleGroup);
+        tile.enableBody = true;
+        tile.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
+        game.physics.isoArcade.enable(tile);
+        tile.body.setSize(tileSize,tileSize+5,tileSize+5, 0 ,0, 0);
+        tile.body.immovable = true;
+        tile.body.collideWorldBounds = true;
+        tile.anchor.set(0.5,1, 0);
+    } else {
+        console.log("UNKNOWN TILE");
+    }
+    return tile;
+}
+
+
 
 function generateMap(game) {
     game.tiles = [];
-    for( var y = 1; y < game.nrTilesY -1; y++) {
-        game.tiles[y] = [];
-        for(var x = 1; x < game.nrTilesX - 1; x++){
+    var heigth = game.map.layers[0].height;
+    for( var y = 1; y < heigth - 1; y++) {
+        game.tiles[y] = new Array(game.map.layers[0].width);
+        for(var x = 1; x < game.map.layers[0].width - 1; x++){
             // Generate tile
-            var tileType = game.map.tiles[y][x];
-            var tile;
-            if(tileType == tileEnum.FLOOR01) {
-                tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', game.map.tiles[y][x] - 1, game.floorGroup);
-                tile.anchor.set(0.5,1);
-                tile.visible = false;
-            } else if(tileType == tileEnum.LAVA) {
-                tile = game.add.isoSprite(x*tileSize,y*tileSize, 0,'tileset', game.map.tiles[y][x] - 1, game.liquidGroup);
-                tile.isoZ += 6;
-                game.liquidGroup.add(tile);
-                game.physics.isoArcade.enable(tile);
-                tile.body.collideWorldBounds = true;
-                tile.anchor.set(0.5,1, 0);
-                tile.body.immovable = true;
-            } else if(tileType == tileEnum.BORDER){
-                tile = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,null, 0, game.obstacleGroup);
-                tile.enableBody = true;
-                tile.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
-                game.physics.isoArcade.enable(tile);
-                tile.body.setSize(tileSize,tileSize+5,tileSize+5, 0 ,0, 0);
-                tile.body.immovable = true;
-                tile.body.collideWorldBounds = true;
-                tile.anchor.set(0.5,1, 0);
-            } else {
-                // EMPTY TILE
-            }
-            game.tiles[y][x] = tile;
+
 
             //Generate enemy{
-            var enemyType = game.map.enemies[y][x];
+
+            var enemyType = game.map.layers[1].data[y*heigth+x];
             var enemy;
-            if(enemyType == enemyEnum.BAT) {
-                enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, game.enemyGroup);
-                enemy.radiusStart = 0;
-                createBat(enemy);
-                game.flyingGroup.add(enemy);
-                game.enemyGroup.add(enemy);
-            }
-            else if(enemyType == enemyEnum.STAIR) {
+         if(enemyType == objectEnum.STAIR) {
                 enemy = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,'Stair', 0);
                 enemy.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
                 game.physics.isoArcade.enable(enemy);
@@ -178,6 +181,14 @@ function generateMap(game) {
                 enemy.body.immovable = true;
                 enemy.body.collideWorldBounds = true;
                 game.stair = enemy;
+            } else if(enemyType ==  objectEnum.PLAYER) {
+
+                game.player = game.add.isoSprite(x*tileSize - tileSize,y*tileSize - tileSize,0, 'PlayerSprite',0);
+                createPlayer(game.player);
+                // Camera should follow player
+                game.camera.x = game.player.body.x;
+                game.camera.y = game.player.body.y;
+                game.camera.follow(game.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
             }
         }
     }
@@ -204,6 +215,7 @@ function createText(game) {
 function createGame(game) {
     // Set gravity
     game.physics.isoArcade.gravity.setTo(0, 0, -500);
+    game.map = game.cache.getJSON('map');
 
     // Set background color
     game.stage.backgroundColor = "#000000";
@@ -221,6 +233,14 @@ function createGame(game) {
     game.buttons =  [{unpressed: null, pressed: null},{unpressed: null, pressed: null},{unpressed: null, pressed: null},{unpressed: null, pressed: null}];
     game.buttonPosition = [{x: 22*game.scaleFactor,y:game.height - 109*game.scaleFactor},{x:140*game.scaleFactor ,y:game.height - 109*game.scaleFactor},{x: 254*game.scaleFactor ,y: game.height - 109*game.scaleFactor},{x: 369*game.scaleFactor  ,y: game.height - 109*game.scaleFactor}];
     game.buttonNames = ['Q','W','',''];
+
+    // Increase world size
+    game.nrTilesX = game.map.layers[0].width; 
+    game.nrTilesY = game.map.layers[0].height;  
+    var length = game.nrTilesY*tileSize; 
+    var width = game.nrTilesX*tileSize; 
+    var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
+    game.world.setBounds(0, 0, length*2-4*tileSize, worldWidth*2-4*tileSize);
 }
 
 function createBitmap(game) {
@@ -237,13 +257,6 @@ function preloadGame(game) {
     game.plugins.add(new Phaser.Plugin.Isometric(game));
     game.iso.anchor.set(0.5, 0);
 
-    // Increase world size
-    game.nrTilesX = game.map.tiles[0].length; 
-    game.nrTilesY = game.map.tiles.length;  
-    var length = game.nrTilesY*tileSize; 
-    var width = game.nrTilesX*tileSize; 
-    var worldWidth = Math.sqrt(Math.pow(length, 2) + Math.pow(width, 2)); 
-    game.world.setBounds(0, 0, length*2-4*tileSize, worldWidth*2-4*tileSize);
 
     // Isometric
     game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
@@ -263,8 +276,9 @@ function loadAssets(game){
     game.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
     game.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
     game.load.image('ButtonLocked', '../Res/Images/SpriteSheet/ButtonLocked.png');
+    game.load.json('map', game.mapName);
     // Load map tiles
-    game.load.atlasJSONHash('tileset', '../Res/Images/Tiles/tiles.png', '../Res/Images/Tiles/tiles.json');
+    game.load.spritesheet('tiles', '../Res/Images/Tiles/tiles.png', 62,32, 6); 
 }
 
 
@@ -370,7 +384,7 @@ function createPlayer(player) {
         if(game.input.activePointer.isDown) {
             var out = {x: 0, y: 0};
             game.iso.unproject(game.input.activePointer.position, out);
-            if(getTile(out.x, out.y, game.map) != 0 && getTile(out.x, out.y, game.map) != 3) {
+            if(getTile(out.x, out.y, game.map) != tileEnum.EMPTY && getTile(out.x, out.y, game.map) != tileEnum.BORDER) {
                 player.target.body.x = out.x;
                 player.target.body.y = out.y;
                 player.moving = true;
@@ -515,8 +529,9 @@ function getAnimationDirection(angle) {
 function getTile(inx, iny, map) {
     var xx = Math.ceil(inx /tileSize  - 1)+1;
     var yy = Math.ceil(iny/tileSize - 1)+1;
-    if(yy >= 0 && yy < map.tiles.length && xx >= 0 && xx < map.tiles[0].length) {
-        return map.tiles[yy][xx];
+    var height = map.layers[0].height;
+    if(yy >= 0 && yy < height && xx >= 0 && xx < map.layers[0].width) {
+        return map.layers[0].data[yy*height + xx];
     } else {
         return 0;
     }
