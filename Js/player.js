@@ -95,9 +95,6 @@ function createPlayer(game, player) {
     };
 
     player.updateMove = function(){
-
-        // Get angle between pointer and player
-
         if(getTile(player.body.x, player.body.y, game.map) == tileEnum.EMPTY) {
             game.add.tween(player.scale).to({x:0, y:0},400, "Linear",true);
             game.camera.fade('#000000');

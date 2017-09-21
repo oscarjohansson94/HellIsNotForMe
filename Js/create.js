@@ -285,7 +285,7 @@ return tile;
 function createBat(enemy) {
     enemy.name = 'EnemyBat';
     enemy.scale.setTo(0.3,0.3);
-    enemy.anchor.set(0.5, 0.5);
+    enemy.anchor.set(0.5, 0.5, 0.5);
     enemy.animations.add('EnemyBatLeft', [0,1,2,3]);
     enemy.animations.add('EnemyBatFrontRight', [4,5,6]);
     enemy.animations.add('EnemyBatRight', [7,8,9,10]);
@@ -300,6 +300,7 @@ function createBat(enemy) {
     enemy.radius = 150;
     game.physics.isoArcade.enable(enemy);
     enemy.body.collideWorldBounds = true;
+    enemy.body.setSize(75,75,75);
     enemy.minAttackDistance = 25;
     enemy.speed =  250;
 }

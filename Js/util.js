@@ -1,5 +1,5 @@
 var animationSpeed = 7;
-var showDebug = false;
+var showDebug = true;
 var tileSize = 34;
 
 function debug(game, player){
@@ -8,8 +8,8 @@ function debug(game, player){
         game.obstacleGroup.forEach(function(tile){
             game.debug.body(tile, 'rgba(0, 255, 0, 0.9)', false);
         });
-        game.deathGroup.forEach(function(tile){
-            game.debug.body(tile, 'rgba(0, 255, 0, 0.9)', false);
+        game.enemyGroup.forEach(function(e){
+            game.debug.body(e, 'rgba(0, 255, 0, 0.9)', false);
         });
         if(game.stair) 
             game.debug.body(game.stair, 'rgba(255, 0, 0, 0.6)', false);
