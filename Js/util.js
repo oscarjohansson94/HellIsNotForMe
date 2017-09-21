@@ -141,8 +141,7 @@ function ButtonUp(game, index) {
 }
 
 function pause(game) {
-    if(game.paused == false) game.paused = true;
-    else game.paused = false;
+    game.paused = !game.paused;
 }
 
 
