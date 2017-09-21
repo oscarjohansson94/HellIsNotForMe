@@ -14,8 +14,6 @@ function updateState(game) {
     game.healthBar.width = game.healthBar.maxWidth*Math.max(game.player.health, 0)/game.player.maxHealth;
     game.energyBar.width = game.energyBar.maxWidth*Math.max(game.player.energy, 0)/game.player.maxEnergy;
 
-    // Clear radius drawing
-    game.bitmapData.clear();
 
     updateEnemies(game);
     // Check for border collision
@@ -68,23 +66,18 @@ function updateEnemies(game) {
         }
 
         // Equation of circle to draw vision radius
-        if(game.showRadius) {
-            var radius = e.radius;
-            var theta = e.radiusStart;  // angle that will be increased each loop
-            var h = e.body.x; // x coordinate of circle center
-            var k = e.body.y; // y coordinate of circle center
-            var step = 15;  // amount to add to theta each time (degrees)
-            while(theta < e.radiusStart + 360)
-            { 
-                var xx = h + radius*Math.cos(theta);
-                var yy = k + radius*Math.sin(theta);
-                var out = game.iso.project({x: xx, y: yy, z: 0});
-                game.bitmapData.draw(game.bitmapDataBrush, out.x, out.y);
-                theta += step;
-            }
-            e.radiusStart += 0.005;
-            e.radiusStart %= 360;
+        if(game.showRadius){
+            e.radiuses.visible = true;
+            e.radiuses.forEach(function(r) {
+                r.theta += 0.005;
+                r.theta %= 360;
+                r.body.x = e.body.x + r.radius*Math.cos(r.theta);
+                r.body.y = e.body.y + r.radius*Math.sin(r.theta);
+            });
+        }  else {
+            e.radiuses.visible = false;
         }
+        
     }
 }
 

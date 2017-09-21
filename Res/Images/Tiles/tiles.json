@@ -1,7 +1,7 @@
 {"frames": [
 
 {
-	"filename": "IsoFloor01.png",
+	"filename": "block.png",
 	"frame": {"x":0,"y":0,"w":62,"h":32},
 	"rotated": false,
 	"trimmed": false,
@@ -9,8 +9,104 @@
 	"sourceSize": {"w":62,"h":32}
 },
 {
-	"filename": "IsoFloor02.png",
+	"filename": "EnemyBat.png",
 	"frame": {"x":62,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor01.png",
+	"frame": {"x":124,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor02.png",
+	"frame": {"x":186,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor03.png",
+	"frame": {"x":248,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor04.png",
+	"frame": {"x":310,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor05.png",
+	"frame": {"x":372,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor06.png",
+	"frame": {"x":434,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor07.png",
+	"frame": {"x":496,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor08.png",
+	"frame": {"x":558,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor09.png",
+	"frame": {"x":620,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "IsoFloor10.png",
+	"frame": {"x":682,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "player.png",
+	"frame": {"x":744,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "stair.png",
+	"frame": {"x":806,"y":0,"w":62,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
@@ -21,8 +117,8 @@
 	"version": "1.0",
 	"image": "tiles.png",
 	"format": "RGBA8888",
-	"size": {"w":124,"h":32},
+	"size": {"w":868,"h":32},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:18165a2493a508df259d02dbd54894b5:4415f8a2d530eeed0678fe6c5be5f54c:accbe1e7e294ded8391337fc1c446319$"
+	"smartupdate": "$TexturePacker:SmartUpdate:38d533e8faac2051d7360414a371f70f:532f0f48f0f7c1509464dfa822d3dddb:accbe1e7e294ded8391337fc1c446319$"
 }
 }

@@ -4,5 +4,7 @@ game.state.add('state_level1', state_level1);
 game.state.add('state_level2', state_level2);
 game.state.add('state_level3', state_level3);
 game.state.add('state_level4', state_level4);
+game.state.add('state_level5', state_level5);
+game.state.add('state_level6', state_level6);
 
 game.state.start('state_level1');

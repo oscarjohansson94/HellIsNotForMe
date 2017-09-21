@@ -35,12 +35,13 @@ function loadAssets(game){
     game.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
     game.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
     game.load.image('ButtonLocked', '../Res/Images/SpriteSheet/ButtonLocked.png');
+    game.load.image('Radius', '../Res/Images/SpriteSheet/Radius.png');
 
     // Load json file with map layout
     game.load.json('map', game.mapName);
 
     // Load map tiles
-    game.load.spritesheet('tiles', '../Res/Images/Tiles/tiles.png', 62,32, 6); 
+    game.load.spritesheet('tiles', '../Res/Images/Tiles/tiles.png', 62,32, 14); 
 } 
 
 /* 

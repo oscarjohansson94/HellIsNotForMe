@@ -1,5 +1,5 @@
 var animationSpeed = 7;
-var showDebug = false;
+var showDebug = true;
 var tileSize = 34;
 
 function debug(game, player){
@@ -12,21 +12,39 @@ function debug(game, player){
             game.debug.body(game.stair, 'rgba(255, 0, 0, 0.6)', false);
         if(game.player.target) 
             game.debug.body(game.player.target, 'rgba(255, 0, 0, 0.6)', false);
+        if(game.enemyGroup)
+            game.enemyGroup.forEach(function(e) {
+                if(e.radiusSprite) {
+                    game.debug.body(e.radiusSprite, 'rgba(255, 0, 0, 0.6)', false);
+                }
+            });
     }
 }
 
-tileEnum = {
+var tileEnum = {
     EMPTY: 0,
     BORDER: 1,
     FLOOR01: 3,
-    LAVA: 4
-}
+    FLOOR02: 6,
+    FLOOR03: 7,
+    FLOOR04: 8,
+    FLOOR05: 9,
+    FLOOR06: 11,
+    LAVA01: 4,
+    LAVA02: 5,
+    LAVA03: 10,
+    START: 12
 
-objectEnum = {
+}
+ 
+var lavaSet = new Set([tileEnum.LAVA01, tileEnum.LAVA02, tileEnum.LAVA03]);
+var floorSet = new Set([tileEnum.FLOOR01,tileEnum.FLOOR02,tileEnum.FLOOR03,tileEnum.FLOOR04,tileEnum.FLOOR05,tileEnum.FLOOR06]); 
+
+var objectEnum = {
     EMPTY: 0,
     BAT: 2,
-    PLAYER: 5,
-    STAIR: 6
+    PLAYER: 13,
+    STAIR: 14
 }
 
 function renderState(game) {

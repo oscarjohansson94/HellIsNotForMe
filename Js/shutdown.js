@@ -4,8 +4,6 @@
  * Help javascripts garbage collection to free memory
  */
 function clear(game) {
-    game.bitmapData.destroy();
-    game.bitmapDataBrush.destroy();
     if(game.player.shield)
         game.player.shield.destroy();
     if(game.player.fire)
@@ -14,6 +12,9 @@ function clear(game) {
         game.player.target.destroy();
     game.player.destroy();
     game.floorGroup.destroy();
+    game.enemyGroup.forEach(function(e) {
+        e.radiuses.destroy();
+    });
     game.enemyGroup.destroy();
     game.liquidGroup.destroy();
     game.hudGroup.destroy();

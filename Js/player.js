@@ -83,11 +83,11 @@ function createPlayer(game, player) {
             player.takeDamage(1);
         }
 
-        if(!player.Shield.visible && !player.burning && getTile(player.body.x, player.body.y, game.map) == tileEnum.LAVA){
+        if(!player.Shield.visible && !player.burning && lavaSet.has(getTile(player.body.x, player.body.y, game.map))){
             player.burning = true;
             player.fire = createFire(game);
 
-        } else if((game.player.burning && getTile(game.player.body.x, game.player.body.y, game.map) != tileEnum.LAVA) 
+        } else if((game.player.burning && !lavaSet.has(getTile(game.player.body.x, game.player.body.y, game.map))) 
             || (player.Shield.visible && player.burning)){
             player.fire.destroy();
             player.burning = false;
@@ -144,7 +144,7 @@ function createPlayer(game, player) {
             player.Shield.body.y = player.body.y ;
             player.Shield.body.z = player.body.z + 25;
             if(player.energy <= 0) {
-                ButtonUp(game,0);
+                ButtonUp(game,1);
             }
         }
 
