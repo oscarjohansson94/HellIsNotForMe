@@ -111,14 +111,30 @@
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
 	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "Zdeath.png",
+	"frame": {"x":868,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
+},
+{
+	"filename": "zIce.png",
+	"frame": {"x":930,"y":0,"w":62,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":32},
+	"sourceSize": {"w":62,"h":32}
 }],
 "meta": {
 	"app": "http://www.codeandweb.com/texturepacker",
 	"version": "1.0",
 	"image": "tiles.png",
 	"format": "RGBA8888",
-	"size": {"w":868,"h":32},
+	"size": {"w":992,"h":32},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:38d533e8faac2051d7360414a371f70f:532f0f48f0f7c1509464dfa822d3dddb:accbe1e7e294ded8391337fc1c446319$"
+	"smartupdate": "$TexturePacker:SmartUpdate:47df8fbcc409e8b3cd7111d23d6515bf:ae40964b099ae5d38d3755cfbd000fc2:accbe1e7e294ded8391337fc1c446319$"
 }
 }

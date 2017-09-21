@@ -98,6 +98,11 @@ function createPlayer(game, player) {
 
         // Get angle between pointer and player
 
+        if(getTile(player.body.x, player.body.y, game.map) == tileEnum.EMPTY) {
+            game.add.tween(player.scale).to({x:0, y:0},400, "Linear",true);
+            game.camera.fade('#000000');
+            game.camera.onFadeComplete.add(function () {die(game)},this);
+        }
         if(player.target.body)
             player.angleToTarget = Math.atan2(player.target.body.y - player.body.y, player.target.body.x - player.body.x);
         if(game.input.activePointer.isDown) {
@@ -114,8 +119,10 @@ function createPlayer(game, player) {
             game.physics.isoArcade.overlap(player,player.target, function() {player.targetReached = true;});
             if(player.targetReached){
                 player.moving = false;
-                player.body.velocity.x = 0;
-                player.body.velocity.y = 0;
+                if(getTile(player.body.x, player.body.y, game.map) != tileEnum.ICE){
+                    player.body.velocity.x = 0;
+                    player.body.velocity.y = 0;
+                }
                 player.animations.play('IdlePlayer' + getAnimationDirection(player.angleToTarget), animationSpeed, true);
                 player.targetReached = false;
             } else { 

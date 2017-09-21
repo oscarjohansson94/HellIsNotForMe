@@ -7,6 +7,7 @@
  * Main function called by state
  */
 function createState(game) {
+    createGame(game);
     createPlayerStairandInitEmptyWorld(game);
     game.time.events.loop(Phaser.Timer.SECOND * 0.5, function() {redrawMap(game);}, this);
 
@@ -174,8 +175,10 @@ function createText(game) {
     game.textUnderTitle.alpha = 1.0;
     game.textUnderTitle.fixedToCamera = true;
 
-    game.add.tween(game.textTitle).to( { alpha: 0.0 }, 500, "Linear", true, 2000);
-    game.add.tween(game.textUnderTitle).to( { alpha: 0.0 }, 500, "Linear", true, 2000);
+    var word_l = game.levelTitleText.length + game.levelUnderTitleText.length;
+    var time = 1000*(word_l/5)/(150/60);
+    game.add.tween(game.textTitle).to( { alpha: 0.0 }, 500, "Linear", true, time);
+    game.add.tween(game.textUnderTitle).to( { alpha: 0.0 }, 500, "Linear", true, time);
 }
 
 
@@ -215,26 +218,26 @@ function redrawMap(game) {
                 enemy.radiuses.visible = false;
                 game.flyingGroup.add(enemy);
                 game.enemyGroup.add(enemy);
-                    var radius = enemy.radius;
-                    var theta = enemy.radiusStart;  // angle that will be increased each loop
-                    var h = enemy.body.x; // x coordinate of circle center
-                    var k = enemy.body.y; // y coordinate of circle center
-                    var step = 15;  // amount to add to theta each time (degrees)
-                    while(theta < enemy.radiusStart + 360)
-                    { 
-                        var xx = radius*Math.cos(theta);
-                        var yy = radius*Math.sin(theta);
-                        var out = game.iso.project({x: xx, y: yy, z: 0});
-                        var sprite = game.add.isoSprite(x*tileSize - tileSize+xx,y*tileSize - tileSize+yy, 0, 'Radius');
-                        sprite.alpha = 0.85;
-                        sprite.scale.setTo(0.3,0.3);
-                        sprite.radius = enemy.radius;
-                        sprite.theta = theta;
-                        game.physics.isoArcade.enable(sprite);
-                        sprite.body.collideWorldBounds = true;
-                        theta += step;
-                        enemy.radiuses.add(sprite);
-                    }
+                var radius = enemy.radius;
+                var theta = enemy.radiusStart;  // angle that will be increased each loop
+                var h = enemy.body.x; // x coordinate of circle center
+                var k = enemy.body.y; // y coordinate of circle center
+                var step = 15;  // amount to add to theta each time (degrees)
+                while(theta < enemy.radiusStart + 360)
+                { 
+                    var xx = radius*Math.cos(theta);
+                    var yy = radius*Math.sin(theta);
+                    var out = game.iso.project({x: xx, y: yy, z: 0});
+                    var sprite = game.add.isoSprite(x*tileSize - tileSize+xx,y*tileSize - tileSize+yy, 0, 'Radius');
+                    sprite.alpha = 0.85;
+                    sprite.scale.setTo(0.3,0.3);
+                    sprite.radius = enemy.radius;
+                    sprite.theta = theta;
+                    game.physics.isoArcade.enable(sprite);
+                    sprite.body.collideWorldBounds = true;
+                    theta += step;
+                    enemy.radiuses.add(sprite);
+                }
             }
         }
     }
@@ -272,7 +275,7 @@ function createTile(x, y, game) {
     } else {
         console.log("UNKNOWN TILE");
     }
-    return tile;
+return tile;
 }
 
 /* 
@@ -298,7 +301,7 @@ function createBat(enemy) {
     game.physics.isoArcade.enable(enemy);
     enemy.body.collideWorldBounds = true;
     enemy.minAttackDistance = 25;
-    enemy.speed =  200;
+    enemy.speed =  250;
 }
 
 /*

@@ -1,11 +1,14 @@
 var animationSpeed = 7;
-var showDebug = true;
+var showDebug = false;
 var tileSize = 34;
 
 function debug(game, player){
     if(showDebug){
         game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
         game.obstacleGroup.forEach(function(tile){
+            game.debug.body(tile, 'rgba(0, 255, 0, 0.9)', false);
+        });
+        game.deathGroup.forEach(function(tile){
             game.debug.body(tile, 'rgba(0, 255, 0, 0.9)', false);
         });
         if(game.stair) 
@@ -33,12 +36,12 @@ var tileEnum = {
     LAVA01: 4,
     LAVA02: 5,
     LAVA03: 10,
-    START: 12
-
+    START: 12,
+    ICE: 16
 }
  
 var lavaSet = new Set([tileEnum.LAVA01, tileEnum.LAVA02, tileEnum.LAVA03]);
-var floorSet = new Set([tileEnum.FLOOR01,tileEnum.FLOOR02,tileEnum.FLOOR03,tileEnum.FLOOR04,tileEnum.FLOOR05,tileEnum.FLOOR06]); 
+var floorSet = new Set([tileEnum.ICE, tileEnum.START,tileEnum.FLOOR01,tileEnum.FLOOR02,tileEnum.FLOOR03,tileEnum.FLOOR04,tileEnum.FLOOR05,tileEnum.FLOOR06]); 
 
 var objectEnum = {
     EMPTY: 0,

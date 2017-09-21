@@ -41,7 +41,7 @@ function loadAssets(game){
     game.load.json('map', game.mapName);
 
     // Load map tiles
-    game.load.spritesheet('tiles', '../Res/Images/Tiles/tiles.png', 62,32, 14); 
+    game.load.spritesheet('tiles', '../Res/Images/Tiles/tiles.png', 62,32, 16); 
 } 
 
 /* 

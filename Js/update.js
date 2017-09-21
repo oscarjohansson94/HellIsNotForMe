@@ -20,10 +20,11 @@ function updateState(game) {
     game.obstacleGroup.forEach(function(b) {
         game.physics.isoArcade.collide(b,game.player);
     });
+
     game.physics.isoArcade.collide(game.stair, game.player, function() {
         game.camera.fade('#000000');
         game.camera.onFadeComplete.add(function () {nextLevel(game)},this);
-    })
+    });
     sortGame(game);
     game.player.endOfFrame();
 }
@@ -77,7 +78,7 @@ function updateEnemies(game) {
         }  else {
             e.radiuses.visible = false;
         }
-        
+
     }
 }
 
