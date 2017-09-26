@@ -188,14 +188,6 @@ function createText(game) {
  */
 function redrawMap(game) {
     var out = {x: 0, y: 0};
-    if(game.lastPlayerPos) {
-        for(var y = game.lastPlayerPos.ys; y <= game.lastPlayerPos.ye; y++) {
-            for(var x = game.lastPlayerPos.xs; x <= game.lastPlayerPos.xe; x++) {
-                if(game.tiles[y] && game.tiles[y][x])
-                    game.tiles[y][x].destroy();
-            }
-        }
-    }
     out.x = Math.ceil(game.player.body.x /tileSize  - 1)+1;
     out.y = Math.ceil(game.player.body.y/tileSize - 1)+1;
     var nrTilesX = game.map.layers[0].width;
@@ -205,40 +197,36 @@ function redrawMap(game) {
     var ystart = Math.round(Math.max(1, out.y - dist));
     var xend = Math.round(Math.min(game.nrTilesX-1, out.x + dist));
     var yend = Math.round(Math.min(game.nrTilesY-1, out.y + dist));
+
+    if(game.lastPlayerPos) {
+        for(var y = game.lastPlayerPos.ys; y <= game.lastPlayerPos.ye; y++) {
+            for(var x = game.lastPlayerPos.xs; x <= game.lastPlayerPos.xe; x++) {
+                if(game.tiles[y] && game.tiles[y][x] ){
+                    // && (y < ystart || y > yend || x < xstart || x > xend)){
+                    game.tiles[y][x].destroy();
+                }
+            }
+        }
+    }
     for(var y = ystart; y <= yend; y++) {
         for(var x = xstart; x <= xend; x++) {
-            if(game.tiles[y])
+            if(game.tiles[y]) {
+                // && (!game.lastPlayerPos ||  y < game.lastPlayerPos.ys || y >game.lastPlayerPos.ye || x <game.lastPlayerPos.xs || x > game.lastPlayerPos.xe)){
                 game.tiles[y][x] = createTile(x,y,game);
+            }
             if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BAT) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, game.enemyGroup);
-                createBat(enemy);
-                enemy.radiusStart = 0;
-                enemy.radiuses = game.add.group();
-                enemy.radiuses.visible = false;
-                game.flyingGroup.add(enemy);
-                game.enemyGroup.add(enemy);
-                var radius = enemy.radius;
-                var theta = enemy.radiusStart;  // angle that will be increased each loop
-                var h = enemy.body.x; // x coordinate of circle center
-                var k = enemy.body.y; // y coordinate of circle center
-                var step = 15;  // amount to add to theta each time (degrees)
-                while(theta < enemy.radiusStart + 360)
-                { 
-                    var xx = radius*Math.cos(theta);
-                    var yy = radius*Math.sin(theta);
-                    var out = game.iso.project({x: xx, y: yy, z: 0});
-                    var sprite = game.add.isoSprite(x*tileSize - tileSize+xx,y*tileSize - tileSize+yy, 0, 'Radius');
-                    sprite.alpha = 0.85;
-                    sprite.scale.setTo(0.3,0.3);
-                    sprite.radius = enemy.radius;
-                    sprite.theta = theta;
-                    game.physics.isoArcade.enable(sprite);
-                    sprite.body.collideWorldBounds = true;
-                    theta += step;
-                    enemy.radiuses.add(sprite);
-                }
+                createEnemy(enemy, 'EnemyBat', 100, 150, 75, 250, true);
             }
+            else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BATRED) {
+                console.log("creating red bat");
+                game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
+                enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatRedSprite', 0, game.enemyGroup);
+                //enemy.tint = Math.random() * 0xffffff;
+                createEnemy(enemy, 'EnemyBatRed', 100, 90, 75, 400, true);
+            } 
+
         }
     }
     game.lastPlayerPos = {ys: ystart, ye: yend, xs: xstart, xe: xend};
@@ -273,36 +261,60 @@ function createTile(x, y, game) {
         tile.anchor.set(0.5,1, 0);
     } else if (tileType == tileEnum.EMPTY) {
     } else {
-        console.log("UNKNOWN TILE");
+        console.log("UNKNOWN TILE", tileType);
     }
-return tile;
+    return tile;
 }
 
 /* 
  * Create enemy of type BAT
  * void
  */
-function createBat(enemy) {
-    enemy.name = 'EnemyBat';
+function createEnemy(enemy, name, health, radius, size,speed, flying) {
+    enemy.name = name;
     enemy.scale.setTo(0.3,0.3);
     enemy.anchor.set(0.5, 0.5, 0.5);
-    enemy.animations.add('EnemyBatLeft', [0,1,2,3]);
-    enemy.animations.add('EnemyBatFrontRight', [4,5,6]);
-    enemy.animations.add('EnemyBatRight', [7,8,9,10]);
-    enemy.animations.add('EnemyBatFrontLeft', [11,12,13]);
-    enemy.animations.add('EnemyBatBackRight', [14,15,16]);
-    enemy.animations.add('EnemyBatBack', [17,18,19,20]);
-    enemy.animations.add('EnemyBatBackLeft', [21,22,23]);
-    enemy.animations.add('EnemyBatFront', [24,25,26,27]);
-    enemy.animations.play('EnemyBatBack', this.animationsSpeed, true);
-    enemy.maxHealth = 100;
-    enemy.health = 100;
-    enemy.radius = 150;
+    enemy.animations.add(name  + 'Left', [0,1,2,3]);
+    enemy.animations.add(name + 'FrontRight', [4,5,6]);
+    enemy.animations.add(name + 'Right', [7,8,9,10]);
+    enemy.animations.add(name + 'FrontLeft', [11,12,13]);
+    enemy.animations.add(name + 'BackRight', [14,15,16]);
+    enemy.animations.add(name + 'Back', [17,18,19,20]);
+    enemy.animations.add(name + 'BackLeft', [21,22,23]);
+    enemy.animations.add(name + 'Front', [24,25,26,27]);
+    enemy.animations.play(name + 'Back', this.animationsSpeed, true);
+    enemy.maxHealth = health;
+    enemy.health = health;
+    enemy.radius = radius;
     game.physics.isoArcade.enable(enemy);
     enemy.body.collideWorldBounds = true;
-    enemy.body.setSize(75,75,75);
-    enemy.minAttackDistance = 25;
-    enemy.speed =  250;
+    enemy.body.setSize(size,size,size);
+    enemy.speed =  speed;
+    enemy.radiusStart = 0;
+    enemy.radiuses = game.add.group();
+    enemy.radiuses.visible = false;
+    if(flying)
+        game.flyingGroup.add(enemy);
+    game.enemyGroup.add(enemy);
+    var theta = enemy.radiusStart;  // angle that will be increased each loop
+    var h = enemy.body.x; // x coordinate of circle center
+    var k = enemy.body.y; // y coordinate of circle center
+    var step = 15;  // amount to add to theta each time (degrees)
+    while(theta < enemy.radiusStart + 360)
+    { 
+        var xx = radius*Math.cos(theta);
+        var yy = radius*Math.sin(theta);
+        var out = game.iso.project({x: xx, y: yy, z: 0});
+        var sprite = game.add.isoSprite(enemy.body.x+xx,enemy.body.y+yy, 0, 'Radius');
+        sprite.alpha = 0.85;
+        sprite.scale.setTo(0.3,0.3);
+        sprite.radius = enemy.radius;
+        sprite.theta = theta;
+        game.physics.isoArcade.enable(sprite);
+        sprite.body.collideWorldBounds = true;
+        theta += step;
+        enemy.radiuses.add(sprite);
+    }
 }
 
 /*

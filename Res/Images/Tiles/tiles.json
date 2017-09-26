@@ -113,7 +113,7 @@
 	"sourceSize": {"w":62,"h":32}
 },
 {
-	"filename": "Zdeath.png",
+	"filename": "zIce.png",
 	"frame": {"x":868,"y":0,"w":62,"h":32},
 	"rotated": false,
 	"trimmed": false,
@@ -121,7 +121,7 @@
 	"sourceSize": {"w":62,"h":32}
 },
 {
-	"filename": "zIce.png",
+	"filename": "zzEnemyBatRed.png",
 	"frame": {"x":930,"y":0,"w":62,"h":32},
 	"rotated": false,
 	"trimmed": false,
@@ -135,6 +135,6 @@
 	"format": "RGBA8888",
 	"size": {"w":992,"h":32},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:47df8fbcc409e8b3cd7111d23d6515bf:ae40964b099ae5d38d3755cfbd000fc2:accbe1e7e294ded8391337fc1c446319$"
+	"smartupdate": "$TexturePacker:SmartUpdate:dc6e51a89fc21cf3322d9b3c166d7679:fbf933500d7504c8f39bffe749f3813f:accbe1e7e294ded8391337fc1c446319$"
 }
 }

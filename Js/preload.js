@@ -22,6 +22,7 @@ function loadAssets(game){
     // Load game sprites
     game.load.spritesheet('PlayerSprite', '../Res/Images/SpriteSheet/PlayerAtlas.png', 162.83,212, 67); 
     game.load.spritesheet('EnemyBatSprite', '../Res/Images/SpriteSheet/EnemyBat.png', 272, 282, 28);
+    game.load.spritesheet('EnemyBatRedSprite', '../Res/Images/SpriteSheet/EnemyBatRed.png', 272, 282, 28);
     game.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
     game.load.spritesheet('Shield', '../Res/Images/SpriteSheet/Shield.png', 201,100, 8); 
 
@@ -41,7 +42,7 @@ function loadAssets(game){
     game.load.json('map', game.mapName);
 
     // Load map tiles
-    game.load.spritesheet('tiles', '../Res/Images/Tiles/tiles.png', 62,32, 16); 
+    game.load.spritesheet('tiles', '../Res/Images/Tiles/tiles.png', 62,32, 17); 
 } 
 
 /* 

@@ -1,5 +1,5 @@
 var animationSpeed = 7;
-var showDebug = true;
+var showDebug = false;
 var tileSize = 34;
 
 function debug(game, player){
@@ -37,7 +37,7 @@ var tileEnum = {
     LAVA02: 5,
     LAVA03: 10,
     START: 12,
-    ICE: 16
+    ICE: 15
 }
  
 var lavaSet = new Set([tileEnum.LAVA01, tileEnum.LAVA02, tileEnum.LAVA03]);
@@ -47,7 +47,8 @@ var objectEnum = {
     EMPTY: 0,
     BAT: 2,
     PLAYER: 13,
-    STAIR: 14
+    STAIR: 14,
+    BATRED: 16
 }
 
 function renderState(game) {
@@ -99,8 +100,8 @@ function getAnimationDirection(angle) {
  * int
  */
 function getTile(inx, iny, map) {
-    var xx = Math.ceil(inx /tileSize  - 1)+1;
-    var yy = Math.ceil(iny/tileSize - 1)+1;
+    var xx = Math.ceil(inx /tileSize  - 1)+2;
+    var yy = Math.ceil(iny/tileSize - 1)+2;
     var height = map.layers[0].height;
     if(yy >= 0 && yy < height && xx >= 0 && xx < map.layers[0].width) {
         return map.layers[0].data[yy*height + xx];

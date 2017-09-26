@@ -179,11 +179,11 @@ var state_level8 = {
 };
 var state_level9 = {
     preload: function() {
-        game.mapName = '../Res/Maps/map10.json'; // Change this to change map
+        game.mapName = '../Res/Maps/map12.json'; // Change this to change map
         game.nextState = 'state_level10';
         game.buttonState = [true, false, false, false];
-        game.levelTitleText = '09 - It almost looks like...';
-        game.levelUnderTitleText = 'Could it be?';
+        game.levelTitleText = '09 - The Red Bat';
+        game.levelUnderTitleText = 'Time to use Q and prioritize';
         preloadState(game);
     },
     create: function() {
@@ -201,11 +201,11 @@ var state_level9 = {
 };
 var state_level10 = {
     preload: function() {
-        game.mapName = '../Res/Maps/map06.json'; // Change this to change map
+        game.mapName = '../Res/Maps/map11.json'; // Change this to change map
         game.nextState = 'state_level11';
-        game.buttonState = [true, false, false, false];
-        game.levelTitleText = '10 - HELL FREEZES OVER';
-        game.levelUnderTitleText = 'It finally happened';
+        game.buttonState = [true, true, false, false];
+        game.levelTitleText = '10 - Cold Feets';
+        game.levelUnderTitleText = 'Use W';
         preloadState(game);
     },
     create: function() {
@@ -223,11 +223,55 @@ var state_level10 = {
 };
 var state_level11 = {
     preload: function() {
+        game.mapName = '../Res/Maps/map10.json'; // Change this to change map
+        game.nextState = 'state_level12';
+        game.buttonState = [true, true, false, false];
+        game.levelTitleText = '11 - It almost looks like...';
+        game.levelUnderTitleText = 'Could it be?';
+        preloadState(game);
+    },
+    create: function() {
+        createState(game);
+    },
+    update: function() {
+        updateState(game);
+    },
+    shutdown: function() {
+        clear(game);
+    },
+    render: function () {
+        renderState(game);
+    }
+};
+var state_level12 = {
+    preload: function() {
+        game.mapName = '../Res/Maps/map06.json'; // Change this to change map
+        game.nextState = 'state_level13';
+        game.buttonState = [true, true, false, false];
+        game.levelTitleText = '12 - HELL FREEZES OVER';
+        game.levelUnderTitleText = 'It finally happened';
+        preloadState(game);
+    },
+    create: function() {
+        createState(game);
+    },
+    update: function() {
+        updateState(game);
+    },
+    shutdown: function() {
+        clear(game);
+    },
+    render: function () {
+        renderState(game);
+    }
+};
+var state_level13 = {
+    preload: function() {
         game.mapName = '../Res/Maps/map09.json'; // Change this to change map
         game.nextState = 'state_level1';
-        game.buttonState = [true, false, false, false];
-        game.levelTitleText = '11- Frozen';
-        game.levelUnderTitleText = 'The cold never bother me anyway';
+        game.buttonState = [true, true, false, false];
+        game.levelTitleText = '13- Frozen';
+        game.levelUnderTitleText = 'The cold never bothered me anyway';
         preloadState(game);
     },
     create: function() {
