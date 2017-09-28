@@ -39,7 +39,7 @@ var tileEnum = {
     START: 12,
     ICE: 15
 }
- 
+
 var lavaSet = new Set([tileEnum.LAVA01, tileEnum.LAVA02, tileEnum.LAVA03]);
 var floorSet = new Set([tileEnum.ICE, tileEnum.START,tileEnum.FLOOR01,tileEnum.FLOOR02,tileEnum.FLOOR03,tileEnum.FLOOR04,tileEnum.FLOOR05,tileEnum.FLOOR06]); 
 
@@ -61,6 +61,8 @@ function renderState(game) {
  * sort to display correct object above other
  */
 function sortGame(game) {
+    if(game.decoyActive)
+        game.world.bringToTop(game.player.decoy);
     game.world.bringToTop(game.enemyGroup);
     game.world.bringToTop(game.player);
     game.world.bringToTop(game.hudGroup);
@@ -125,6 +127,12 @@ function ButtonDown(game, index) {
         } else if(index == 1) {
             game.player.Shield.visible = true;
             game.player.Shield.animations.play('Start', 28, true);
+        } else if(index == 2) {
+            if(game.player.energy >= 50) {
+                game.player.reduceEnergy(50);
+                game.decoyActive = true;
+                game.player.createDecoy(game);
+            }
         }
     }
 }
@@ -137,6 +145,7 @@ function ButtonUp(game, index) {
             game.showRadius = false;
         } else if(index == 1) {
             game.player.Shield.animations.play('End', 28, true);
+        } else if(index == 2) {
         }
     }
 }
@@ -155,3 +164,6 @@ function nextLevel(game) {
     game.state.start(game.nextState);
 }
 
+function getAngle(y1, y2, x1, x2) {
+    return Math.atan2(y1 - y2, x1 - x2);
+}

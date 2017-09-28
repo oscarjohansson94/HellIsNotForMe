@@ -14,4 +14,4 @@ game.state.add('state_level11', state_level11);
 game.state.add('state_level12', state_level12);
 game.state.add('state_level13', state_level13);
 
-game.state.start('state_level1');
+game.state.start('state_level8');

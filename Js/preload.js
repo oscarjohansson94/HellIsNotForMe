@@ -34,9 +34,13 @@ function loadAssets(game){
     game.load.image('QButtonPressed', '../Res/Images/SpriteSheet/QButtonPressed.png');
     game.load.image('WButton', '../Res/Images/SpriteSheet/WButton.png');
     game.load.image('WButtonPressed', '../Res/Images/SpriteSheet/WButtonPressed.png');
+    game.load.image('EButton', '../Res/Images/SpriteSheet/EButton.png');
+    game.load.image('EButtonPressed', '../Res/Images/SpriteSheet/EButtonPressed.png');
     game.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
     game.load.image('ButtonLocked', '../Res/Images/SpriteSheet/ButtonLocked.png');
     game.load.image('Radius', '../Res/Images/SpriteSheet/Radius.png');
+    game.load.image('Bullet', '../Res/Images/SpriteSheet/bullet.png');
+    game.load.image('Decoy', '../Res/Images/SpriteSheet/decoy.png');
 
     // Load json file with map layout
     game.load.json('map', game.mapName);

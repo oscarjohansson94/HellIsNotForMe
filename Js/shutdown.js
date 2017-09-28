@@ -8,6 +8,8 @@ function clear(game) {
         game.player.shield.destroy();
     if(game.player.fire)
         game.player.fire.destroy();
+    if(game.player.decoy)
+        game.player.decoy.destroy();
     if(game.player.target) 
         game.player.target.destroy();
     game.player.destroy();

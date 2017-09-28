@@ -46,7 +46,7 @@ function createGame(game) {
     game.buttonPosition = [{x: 22*game.scaleFactor,y:game.height - 109*game.scaleFactor},{x:140*game.scaleFactor ,y:game.height - 109*game.scaleFactor},{x: 254*game.scaleFactor ,y: game.height - 109*game.scaleFactor},{x: 369*game.scaleFactor  ,y: game.height - 109*game.scaleFactor}];
 
     // Name of buttons 
-    game.buttonNames = ['Q','W','',''];
+    game.buttonNames = ['Q','W','E',''];
 
     // Increase world size
     game.nrTilesX = game.map.layers[0].width; 
@@ -152,6 +152,9 @@ function createButtons(game) {
                 game.keyW.onDown.add(function(){ButtonDown(game,1);},this);
                 game.keyW.onUp.add(function(){ButtonUp(game,1);},this);
             } else if(game.buttonNames[i] == 'E') {
+                game.keyE = game.input.keyboard.addKey(Phaser.Keyboard.E);
+                game.keyE.onDown.add(function(){ButtonDown(game,2);},this);
+                game.keyE.onUp.add(function(){ButtonUp(game,2);},this);
             } else if(game.buttonNames[i] == 'R') {
             }
         } else {

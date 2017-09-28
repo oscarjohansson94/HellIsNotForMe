@@ -19,6 +19,12 @@ function updateState(game) {
     // Check for border collision
     game.obstacleGroup.forEach(function(b) {
         game.physics.isoArcade.collide(b,game.player);
+        if(game.decoyActive){
+            game.physics.isoArcade.collide(b,game.player.decoy, function() {
+                game.player.decoy.destroy();
+                game.decoyActive = false;}
+            );
+        }
     });
 
     game.physics.isoArcade.collide(game.stair, game.player, function() {
@@ -46,16 +52,27 @@ function updateEnemies(game) {
 
     // Update bat, expand for containers with enemies
     var distanceEnemyToPlayer;
+    var distanceEnemyToDecoy;
     var enemyToPlayerAngle;
+    var enemyToDecoyAngle;
     for( var i = 0; i < game.enemyGroup.length; i++) {
         var e = game.enemyGroup.getAt(i);
         distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - game.player.body.x, 2) +Math.pow(e.body.y - game.player.body.y, 2));
-        enemyToPlayerAngle = Math.atan2(game.player.body.y - e.body.y, game.player.body.x - e.body.x);
+        if(game.decoyActive) {
+            enemyToDecoyAngle = getAngle(game.player.decoy.body.y, e.body.y, game.player.decoy.body.x, e.body.x);
+            distanceEnemyToDecoy = Math.sqrt(Math.pow(e.body.x - game.player.decoy.body.x, 2) +Math.pow(e.body.y - game.player.decoy.body.y, 2));
+        } else {
+            distanceEnemyToDecoy = Infinity;
+        }
+        enemyToPlayerAngle = getAngle(game.player.body.y, e.body.y, game.player.body.x, e.body.x);
         e.animations.play(e.name + getAnimationDirection(enemyToPlayerAngle), animationSpeed, true);
 
-        if(distanceEnemyToPlayer > e.radius ) {
+        if(distanceEnemyToPlayer > e.radius && distanceEnemyToDecoy > e.radius) {
             e.body.velocity.x = 0;
             e.body.velocity.y = 0;
+        } else if(distanceEnemyToDecoy <= e.radius) {
+            e.body.velocity.x = Math.cos(enemyToDecoyAngle) * e.speed;
+            e.body.velocity.y = Math.sin(enemyToDecoyAngle) * e.speed;
         } else {
             e.body.velocity.x = Math.cos(enemyToPlayerAngle) * e.speed;
             e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;

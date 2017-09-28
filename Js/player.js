@@ -36,6 +36,7 @@ function createPlayer(game, player) {
     player.shield = false;
     player.burning = false;
     player.fire = null;
+    player.decoy = null;
     player.damage = 0;
     player.angleToTarget = 0;
     player.energyDrain = 0;
@@ -74,6 +75,21 @@ function createPlayer(game, player) {
 
     player.reduceEnergy = function(energy) {
         player.energyDrain += energy;
+    }
+    player.createDecoy = function(game) {
+        player.decoy = game.add.isoSprite(player.body.x,player.body.y,0,'Decoy', 0);
+        game.physics.isoArcade.enable(player.decoy);
+        player.decoy.duration = 60;
+        player.decoy.speed = 100;
+        player.decoy.alpha = 1;
+        player.decoy.collideWorldBounds = true;
+        player.decoy.body.allowGravity = false;
+        player.decoy.anchor.set(0.5,0.5,0.5);
+        var out = {x: 0, y: 0};
+        game.iso.unproject(game.input.activePointer.position, out);
+        var angle = getAngle(player.body.y, out.y, player.body.x, out.x); 
+        player.decoy.body.velocity.x =  -Math.cos(angle) * 250;
+        player.decoy.body.velocity.y =  -Math.sin(angle) * 250;
     }
 
     player.updateFire = function(map) {
@@ -131,6 +147,15 @@ function createPlayer(game, player) {
 
     }
 
+    player.updateDecoy = function(game) {
+        if(game.decoyActive) {
+            game.player.decoy.duration--;
+            if(game.player.decoy.duration <= 0) {
+                game.player.decoy.destroy();
+                game.decoyActive = false;
+            }
+        }
+    }
     player.updateRadius = function(game) {
 
         // Drain energy
@@ -168,6 +193,7 @@ function createPlayer(game, player) {
             player.updateFire(game.map);
             player.updateShield();
             player.updateRadius(game);
+            player.updateDecoy(game);
             player.checkDeath(game);
         }
     }
