@@ -227,14 +227,13 @@ function redrawMap(game) {
             if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BAT) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, game.enemyGroup);
-                createEnemy(enemy, 'EnemyBat', 100, 150, 75, 250, true);
+                createEnemy(enemy, 'EnemyBat', 100, 150, 75, 250, true, 0xf900f5);
             }
             else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BATRED) {
-                console.log("creating red bat");
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatRedSprite', 0, game.enemyGroup);
                 //enemy.tint = Math.random() * 0xffffff;
-                createEnemy(enemy, 'EnemyBatRed', 100, 90, 75, 400, true);
+                createEnemy(enemy, 'EnemyBatRed', 100, 90, 75, 400, true, 0xff3a3a);
             } 
 
         }
@@ -280,7 +279,7 @@ function createTile(x, y, game) {
  * Create enemy of type BAT
  * void
  */
-function createEnemy(enemy, name, health, radius, size,speed, flying) {
+function createEnemy(enemy, name, health, radius, size,speed, flying, color) {
     enemy.name = name;
     enemy.scale.setTo(0.3,0.3);
     enemy.anchor.set(0.5, 0.5, 0.5);
@@ -320,6 +319,7 @@ function createEnemy(enemy, name, health, radius, size,speed, flying) {
         sprite.scale.setTo(0.3,0.3);
         sprite.radius = enemy.radius;
         sprite.theta = theta;
+        sprite.tint = color;
         game.physics.isoArcade.enable(sprite);
         sprite.body.collideWorldBounds = true;
         theta += step;
