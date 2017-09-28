@@ -7,6 +7,8 @@
  * Main function called by state
  */
 function createState(game) {
+    game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+    game.stage.backgroundColor = "#fff4e0";
     createGame(game);
     createPlayerStairandInitEmptyWorld(game);
     game.time.events.loop(Phaser.Timer.SECOND * 0.5, function() {redrawMap(game);}, this);
@@ -119,6 +121,11 @@ function createButtons(game) {
     // Add P as a pause button
     game.keyP = game.input.keyboard.addKey(Phaser.Keyboard.P);
     game.keyP.onDown.add(function() {pause(game)}, this);
+    game.keyF = game.input.keyboard.addKey(Phaser.Keyboard.F);
+    game.keyF.onDown.add(function() {
+        
+    game.scale.startFullScreen(false);
+    });
 
     // Add abilty keys if they are enabled
     for(var i = 0; i < 4; i++) {
