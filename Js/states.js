@@ -159,7 +159,7 @@ var state_level8 = {
     preload: function() {
         game.mapName = '../Res/Maps/map08.json'; // Change this to change map
         game.nextState = 'state_level9';
-        game.buttonState = [true, false, true, false];
+        game.buttonState = [true, false, false, false];
         game.levelTitleText = '08 - In The Eyes Of The Enemy';
         game.levelUnderTitleText = 'Use Q';
         preloadState(game);
@@ -204,7 +204,7 @@ var state_level10 = {
         game.mapName = '../Res/Maps/map11.json'; // Change this to change map
         game.nextState = 'state_level11';
         game.buttonState = [true, true, false, false];
-        game.levelTitleText = '10 - Cold Feets';
+        game.levelTitleText = '10 - Cold Feet';
         game.levelUnderTitleText = 'Use W';
         preloadState(game);
     },

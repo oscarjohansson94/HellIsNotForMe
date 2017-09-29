@@ -133,6 +133,13 @@ function ButtonDown(game, index) {
                 game.decoyActive = true;
                 game.player.createDecoy(game);
             }
+        } else if(index == 3) {
+            if(game.portalActive) {
+                game.player.activePortal(game);
+            } else {
+                game.portalActive = true;
+                game.player.createPortal(game);
+            }
         }
     }
 }

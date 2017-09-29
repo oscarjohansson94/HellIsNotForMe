@@ -46,7 +46,7 @@ function createGame(game) {
     game.buttonPosition = [{x: 22*game.scaleFactor,y:game.height - 109*game.scaleFactor},{x:140*game.scaleFactor ,y:game.height - 109*game.scaleFactor},{x: 254*game.scaleFactor ,y: game.height - 109*game.scaleFactor},{x: 369*game.scaleFactor  ,y: game.height - 109*game.scaleFactor}];
 
     // Name of buttons 
-    game.buttonNames = ['Q','W','E',''];
+    game.buttonNames = ['Q','W','E','R'];
 
     // Increase world size
     game.nrTilesX = game.map.layers[0].width; 
@@ -156,6 +156,9 @@ function createButtons(game) {
                 game.keyE.onDown.add(function(){ButtonDown(game,2);},this);
                 game.keyE.onUp.add(function(){ButtonUp(game,2);},this);
             } else if(game.buttonNames[i] == 'R') {
+                game.keyR = game.input.keyboard.addKey(Phaser.Keyboard.R);
+                game.keyR.onDown.add(function(){ButtonDown(game,3);},this);
+                game.keyR.onUp.add(function(){ButtonUp(game,3);},this);
             }
         } else {
             var locked = game.add.image(game.buttonPosition[i].x,game.buttonPosition[i].y, 'ButtonLocked');
@@ -221,7 +224,6 @@ function redrawMap(game) {
     for(var y = ystart; y <= yend; y++) {
         for(var x = xstart; x <= xend; x++) {
             if(game.tiles[y]) {
-                // && (!game.lastPlayerPos ||  y < game.lastPlayerPos.ys || y >game.lastPlayerPos.ye || x <game.lastPlayerPos.xs || x > game.lastPlayerPos.xe)){
                 game.tiles[y][x] = createTile(x,y,game);
             }
             if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BAT) {
@@ -232,7 +234,6 @@ function redrawMap(game) {
             else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BATRED) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatRedSprite', 0, game.enemyGroup);
-                //enemy.tint = Math.random() * 0xffffff;
                 createEnemy(enemy, 'EnemyBatRed', 100, 90, 75, 400, true, 0xff3a3a);
             } 
 

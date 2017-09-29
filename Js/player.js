@@ -92,6 +92,38 @@ function createPlayer(game, player) {
         player.decoy.body.velocity.y =  -Math.sin(angle) * 250;
     }
 
+    player.createPortal = function(game) {
+        game.player.portal = game.add.isoSprite(player.body.x, player.body.y, 0, 'Portal', 0);
+        game.player.portal.tel = false;
+        game.physics.isoArcade.enable(player.portal);
+        game.player.portal.radius = 300;
+        game.player.portal.collideWorldBounds = true;
+        game.player.portal.body.allowGravity = false;
+        game.player.portal.anchor.set(0.5,0.5,0.5);
+        game.player.portal.radiuses = game.add.group();
+        game.player.portal.radiuses.visible = false;
+        var theta = 0;  // angle that will be increased each loop
+        var h = game.player.portal.body.x; // x coordinate of circle center
+        var k = game.player.portal.body.y; // y coordinate of circle center
+        var step = 15;  // amount to add to theta each time (degrees)
+        while(theta < 360)
+        { 
+            var xx = game.player.portal.radius*Math.cos(theta);
+            var yy = game.player.portal.radius*Math.sin(theta);
+            var out = game.iso.project({x: xx, y: yy, z: 0});
+            var sprite = game.add.isoSprite(player.portal.body.x+xx,player.portal.body.y+yy, 0, 'Radius');
+            sprite.alpha = 0.85;
+            sprite.scale.setTo(0.3,0.3);
+            sprite.radius = game.player.portal.radius;
+            sprite.theta = theta;
+            sprite.tint = 0x00fffa;
+            game.physics.isoArcade.enable(sprite);
+            sprite.body.collideWorldBounds = true;
+            theta += step;
+            game.player.portal.radiuses.add(sprite);
+        }
+    }
+
     player.updateFire = function(map) {
         if(player.burning){
             player.fire.body.x = player.body.x;
@@ -111,13 +143,11 @@ function createPlayer(game, player) {
     };
 
     player.updateMove = function(){
-        if(getTile(player.body.x, player.body.y, game.map) == tileEnum.EMPTY) {
+        if((!player.portal || (player.portal && !player.portal.tel))&& getTile(player.body.x, player.body.y, game.map) == tileEnum.EMPTY) {
             game.add.tween(player.scale).to({x:0, y:0},400, "Linear",true);
             game.camera.fade('#000000');
             game.camera.onFadeComplete.add(function () {die(game)},this);
         }
-        if(player.target.body)
-            player.angleToTarget = Math.atan2(player.target.body.y - player.body.y, player.target.body.x - player.body.x);
         if(game.input.activePointer.isDown) {
             var out = {x: 0, y: 0};
             game.iso.unproject(game.input.activePointer.position, out);
@@ -126,10 +156,21 @@ function createPlayer(game, player) {
                 player.target.body.y = out.y;
                 player.moving = true;
             }
-
         }
         if(player.moving) {
-            game.physics.isoArcade.overlap(player,player.target, function() {player.targetReached = true;});
+            var target;
+            var speed;
+            if(game.player.portal && game.player.portal.tel) {
+                target = game.player.portal;
+                speed = 2000;
+                    player.angleToTarget = Math.atan2(player.portal.body.y - player.body.y, player.portal.body.x - player.body.x);
+            } else {
+                if(player.target.body)
+                    player.angleToTarget = Math.atan2(player.target.body.y - player.body.y, player.target.body.x - player.body.x);
+                speed = player.speed;
+                target = player.target;
+            }
+            game.physics.isoArcade.overlap(player,target, function() {player.targetReached = true;});
             if(player.targetReached){
                 player.moving = false;
                 if(getTile(player.body.x, player.body.y, game.map) != tileEnum.ICE){
@@ -140,13 +181,39 @@ function createPlayer(game, player) {
                 player.targetReached = false;
             } else { 
                 player.animations.play('RunPlayer' + getAnimationDirection(player.angleToTarget), animationSpeed, true);
-                player.body.velocity.x = Math.cos(player.angleToTarget) * player.speed;
-                player.body.velocity.y = Math.sin(player.angleToTarget) * player.speed;
+                player.body.velocity.x = Math.cos(player.angleToTarget) * speed;
+                player.body.velocity.y = Math.sin(player.angleToTarget) * speed;
             }
         }
 
     }
 
+    player.destroyPortal = function(game) {
+        game.portalActive = false;
+        game.player.portal.tel = false;
+
+        player.portal.radiuses.forEach(function(r) {
+            r.destroy();
+        });
+        player.portal.radiuses.destroy();
+        player.portal.destroy();
+
+    }
+
+    player.updatePortal = function(game) {
+        if(game.portalActive && game.player.portal) {
+            distancePlayerToPortal = Math.sqrt(Math.pow(game.player.portal.body.x - game.player.body.x, 2) +Math.pow(game.player.portal.body.y - game.player.body.y, 2));
+            if(distancePlayerToPortal > game.player.portal.radius) {
+                player.destroyPortal(game);
+
+            }
+        }
+    }
+
+    player.activePortal = function(game) {
+        player.portal.tel = true;
+        game.player.moving = true;
+    }
     player.updateDecoy = function(game) {
         if(game.decoyActive) {
             game.player.decoy.duration--;
@@ -194,6 +261,7 @@ function createPlayer(game, player) {
             player.updateShield();
             player.updateRadius(game);
             player.updateDecoy(game);
+            player.updatePortal(game);
             player.checkDeath(game);
         }
     }

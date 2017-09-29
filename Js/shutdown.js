@@ -4,6 +4,7 @@
  * Help javascripts garbage collection to free memory
  */
 function clear(game) {
+    game.portalActive = null;
     if(game.player.shield)
         game.player.shield.destroy();
     if(game.player.fire)
@@ -12,6 +13,8 @@ function clear(game) {
         game.player.decoy.destroy();
     if(game.player.target) 
         game.player.target.destroy();
+    if(game.player.portal) 
+        game.player.portal.destroy();
     game.player.destroy();
     game.floorGroup.destroy();
     game.enemyGroup.forEach(function(e) {
