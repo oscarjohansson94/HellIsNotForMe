@@ -44,6 +44,7 @@ function loadAssets(game){
     game.load.image('Bullet', '../Res/Images/SpriteSheet/bullet.png');
     game.load.image('Decoy', '../Res/Images/SpriteSheet/decoy.png');
     game.load.image('Portal', '../Res/Images/SpriteSheet/teleport.png');
+    game.load.image('Tower', '../Res/Images/SpriteSheet/Tower.png');
 
     // Load json file with map layout
     game.load.json('map', game.mapName);

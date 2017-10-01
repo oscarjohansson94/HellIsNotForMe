@@ -48,7 +48,8 @@ var objectEnum = {
     BAT: 2,
     PLAYER: 13,
     STAIR: 14,
-    BATRED: 16
+    BATRED: 16,
+    TOWER: 99
 }
 
 function renderState(game) {

@@ -46,7 +46,7 @@ var state_level3 = {
     preload: function() {
         game.mapName = '../Res/Maps/map02.json'; // Change this to change map
         game.nextState = 'state_level4';
-        game.buttonState = [false, false, false, false];
+        game.buttonState = [false, false, false, true];
         game.levelTitleText = '03 - Advanced Walking 101';
         game.levelUnderTitleText = 'Hell is suprisingly dull';
         preloadState(game);

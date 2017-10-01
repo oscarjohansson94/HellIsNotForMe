@@ -229,13 +229,17 @@ function redrawMap(game) {
             if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BAT) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, game.enemyGroup);
-                createEnemy(enemy, 'EnemyBat', 100, 150, 75, 250, true, 0xf900f5);
+                createEnemy(enemy, 'EnemyBat', 100, 150, 75, 250, true, 0xf900f5,true,false);
             }
             else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BATRED) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatRedSprite', 0, game.enemyGroup);
-                createEnemy(enemy, 'EnemyBatRed', 100, 90, 75, 400, true, 0xff3a3a);
-            } 
+                createEnemy(enemy, 'EnemyBatRed', 100, 90, 75, 400, true, 0xff3a3a,true,false);
+            }  else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.TOWER) {
+                game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
+                enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'Tower', 0, game.enemyGroup);
+                createEnemy(enemy, 'Tower', 100, 90, 75, 400, true, 0x000000,false,true);
+            }
 
         }
     }
@@ -280,7 +284,7 @@ function createTile(x, y, game) {
  * Create enemy of type BAT
  * void
  */
-function createEnemy(enemy, name, health, radius, size,speed, flying, color) {
+function createEnemy(enemy, name, health, radius, size,speed, flying, color,moves,shoots) {
     enemy.name = name;
     enemy.scale.setTo(0.3,0.3);
     enemy.anchor.set(0.5, 0.5, 0.5);
@@ -294,6 +298,8 @@ function createEnemy(enemy, name, health, radius, size,speed, flying, color) {
     enemy.animations.add(name + 'Front', [24,25,26,27]);
     enemy.animations.play(name + 'Back', this.animationsSpeed, true);
     enemy.maxHealth = health;
+    enemy.moves = moves;
+    enemy.shoots = shoots;
     enemy.health = health;
     enemy.radius = radius;
     game.physics.isoArcade.enable(enemy);

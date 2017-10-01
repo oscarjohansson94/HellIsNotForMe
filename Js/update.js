@@ -19,7 +19,7 @@ function updateState(game) {
     // Check for border collision
     game.obstacleGroup.forEach(function(b) {
         if(!game.player.portal || (game.player.portal && !game.player.portal.tel))
-        game.physics.isoArcade.collide(b,game.player);
+            game.physics.isoArcade.collide(b,game.player);
         if(game.decoyActive){
             game.physics.isoArcade.collide(b,game.player.decoy, function() {
                 game.player.decoy.destroy();
@@ -55,6 +55,52 @@ function updateLiquid(liquidGroup) {
 }
 
 /*
+ * Move enemy
+ */
+function enemyMove(game, e) {
+    distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - game.player.body.x, 2) +Math.pow(e.body.y - game.player.body.y, 2));
+    if(game.decoyActive) {
+        enemyToDecoyAngle = getAngle(game.player.decoy.body.y, e.body.y, game.player.decoy.body.x, e.body.x);
+        distanceEnemyToDecoy = Math.sqrt(Math.pow(e.body.x - game.player.decoy.body.x, 2) +Math.pow(e.body.y - game.player.decoy.body.y, 2));
+    } else {
+        distanceEnemyToDecoy = Infinity;
+    }
+    enemyToPlayerAngle = getAngle(game.player.body.y, e.body.y, game.player.body.x, e.body.x);
+    e.animations.play(e.name + getAnimationDirection(enemyToPlayerAngle), animationSpeed, true);
+
+    if(distanceEnemyToPlayer > e.radius && distanceEnemyToDecoy > e.radius) {
+        e.body.velocity.x = 0;
+        e.body.velocity.y = 0;
+    } else if(distanceEnemyToDecoy <= e.radius) {
+        e.body.velocity.x = Math.cos(enemyToDecoyAngle) * e.speed;
+        e.body.velocity.y = Math.sin(enemyToDecoyAngle) * e.speed;
+    } else {
+        e.body.velocity.x = Math.cos(enemyToPlayerAngle) * e.speed;
+        e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;
+    }
+}
+
+/*
+ * Handle enemy shooting
+ */
+function enemyShoot(game, e) {
+    distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - game.player.body.x, 2) +Math.pow(e.body.y - game.player.body.y, 2));
+    if(game.decoyActive) {
+        enemyToDecoyAngle = getAngle(game.player.decoy.body.y, e.body.y, game.player.decoy.body.x, e.body.x);
+        distanceEnemyToDecoy = Math.sqrt(Math.pow(e.body.x - game.player.decoy.body.x, 2) +Math.pow(e.body.y - game.player.decoy.body.y, 2));
+    } else {
+        distanceEnemyToDecoy = Infinity;
+    }
+    enemyToPlayerAngle = getAngle(game.player.body.y, e.body.y, game.player.body.x, e.body.x);
+    if(distanceEnemyToPlayer > e.radius && distanceEnemyToDecoy > e.radius) {
+    } else if(distanceEnemyToDecoy <= e.radius) {
+        console.log("shooting decoy");
+    } else {
+        console.log("shooting player");
+    }
+}
+
+/*
  * Update enemies
  */
 function updateEnemies(game) {
@@ -66,25 +112,11 @@ function updateEnemies(game) {
     var enemyToDecoyAngle;
     for( var i = 0; i < game.enemyGroup.length; i++) {
         var e = game.enemyGroup.getAt(i);
-        distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - game.player.body.x, 2) +Math.pow(e.body.y - game.player.body.y, 2));
-        if(game.decoyActive) {
-            enemyToDecoyAngle = getAngle(game.player.decoy.body.y, e.body.y, game.player.decoy.body.x, e.body.x);
-            distanceEnemyToDecoy = Math.sqrt(Math.pow(e.body.x - game.player.decoy.body.x, 2) +Math.pow(e.body.y - game.player.decoy.body.y, 2));
-        } else {
-            distanceEnemyToDecoy = Infinity;
+        if(e.moves) {
+            enemyMove(game, e); 
         }
-        enemyToPlayerAngle = getAngle(game.player.body.y, e.body.y, game.player.body.x, e.body.x);
-        e.animations.play(e.name + getAnimationDirection(enemyToPlayerAngle), animationSpeed, true);
-
-        if(distanceEnemyToPlayer > e.radius && distanceEnemyToDecoy > e.radius) {
-            e.body.velocity.x = 0;
-            e.body.velocity.y = 0;
-        } else if(distanceEnemyToDecoy <= e.radius) {
-            e.body.velocity.x = Math.cos(enemyToDecoyAngle) * e.speed;
-            e.body.velocity.y = Math.sin(enemyToDecoyAngle) * e.speed;
-        } else {
-            e.body.velocity.x = Math.cos(enemyToPlayerAngle) * e.speed;
-            e.body.velocity.y = Math.sin(enemyToPlayerAngle) * e.speed;
+        if(e.shoots) {
+            enemyShoot(game,e);
         }
         game.physics.isoArcade.overlap(e, game.player, function() {
             game.player.takeDamage(1);
