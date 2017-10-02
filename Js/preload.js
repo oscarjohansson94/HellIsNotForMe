@@ -25,6 +25,7 @@ function loadAssets(game){
     game.load.spritesheet('EnemyBatRedSprite', '../Res/Images/SpriteSheet/EnemyBatRed.png', 272, 282, 28);
     game.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
     game.load.spritesheet('Shield', '../Res/Images/SpriteSheet/Shield.png', 201,100, 8); 
+    game.load.spritesheet('Boss', '../Res/Images/SpriteSheet/bossAtlas.png', 350,300, 30); 
 
     // Load images
     game.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
@@ -45,6 +46,8 @@ function loadAssets(game){
     game.load.image('Decoy', '../Res/Images/SpriteSheet/decoy.png');
     game.load.image('Portal', '../Res/Images/SpriteSheet/teleport.png');
     game.load.image('Tower', '../Res/Images/SpriteSheet/Tower.png');
+    game.load.image('Pause', '../Res/Images/SpriteSheet/pause.png');
+    game.load.image('Reset', '../Res/Images/SpriteSheet/reset.png');
 
     // Load json file with map layout
     game.load.json('map', game.mapName);

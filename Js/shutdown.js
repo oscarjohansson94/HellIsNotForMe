@@ -21,6 +21,9 @@ function clear(game) {
         e.radiuses.destroy();
     });
     game.enemyGroup.destroy();
+    if(game.boss) {
+        game.boss.destroy();
+    }
     game.liquidGroup.destroy();
     game.hudGroup.destroy();
     game.obstacleGroup.destroy();

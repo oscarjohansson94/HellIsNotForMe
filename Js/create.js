@@ -123,10 +123,19 @@ function createButtons(game) {
     game.keyP.onDown.add(function() {pause(game)}, this);
     game.keyF = game.input.keyboard.addKey(Phaser.Keyboard.F);
     game.keyF.onDown.add(function() {
-        
-    game.scale.startFullScreen(false);
+        game.scale.startFullScreen(false);
     });
 
+    game.pauseButton = game.add.image(game.scaleFactor * 1200,10*game.scaleFactor, 'Pause');
+    game.resetButton = game.add.image(game.scaleFactor*1146, 10*game.scaleFactor, 'Reset');
+    game.pauseButton.fixedToCamera = true;
+    game.resetButton.fixedToCamera = true;
+    game.pauseButton.inputEnable = true;
+    game.pauseButton.events.onInputDown.add(function() {console.log("p");pause(game);}, this);
+
+    game.resetButton.events.onInputDown.add(function() {console.log("p");pause(game);}, this);
+    game.hudGroup.add(game.pauseButton);
+    game.hudGroup.add(game.resetButton);
     // Add abilty keys if they are enabled
     for(var i = 0; i < 4; i++) {
         if(game.buttonState[i]){
@@ -239,11 +248,23 @@ function redrawMap(game) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'Tower', 0, game.enemyGroup);
                 createEnemy(enemy, 'Tower', 100, 90, 75, 400, true, 0x000000,false,true);
+            }  else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BOSS) {
+                game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
+                game.boss = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'Boss', 0, game.enemyGroup);
+                createBoss(game);
             }
 
         }
     }
     game.lastPlayerPos = {ys: ystart, ye: yend, xs: xstart, xe: xend};
+}
+
+
+function createBoss(game) {
+    game.boss.animations.add('Idle', [0,1,2]);
+    game.boss.animations.add('WalkLeft', [3,4,5,6,7,8,9]);
+    game.boss.animations.add('WalkRight', [10,11,12,13,14,15,16]);
+    game.boss.animations.add('Spell', [20,21,22,23,24,25,26,27]);
 }
 
 /* 
