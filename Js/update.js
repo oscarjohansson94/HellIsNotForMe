@@ -16,8 +16,14 @@ function updateState(game) {
 
     updateEnemies(game);
     game.player.update(game);
+    if(game.boss){
+        game.boss.update(game);
+    }
     // Check for border collision
     game.obstacleGroup.forEach(function(b) {
+        if(game.boss) {
+            game.physics.isoArcade.collide(b,game.boss);
+        }
         if(!game.player.portal || (game.player.portal && !game.player.portal.tel))
             game.physics.isoArcade.collide(b,game.player);
         if(game.decoyActive){
@@ -36,10 +42,45 @@ function updateState(game) {
             game.player.body.velocity.y = 0;
         });
     }
+    for(var i = 0; i < game.bulletGroup.length; i++) {
+        var bullet = game.bulletGroup.getAt(i);
+        game.physics.isoArcade.overlap(game.player, bullet, function (){
+            game.bulletGroup.remove(i);
+            bullet.destroy();
+            game.player.takeDamage(15);
+        });
+        for(var j = 0; j < game.enemyGroup.length; j++) {
+            var e = game.enemyGroup.getAt(j);
+            if(e.moves) {
+                game.physics.isoArcade.overlap(e, bullet, function (){
+                    game.bulletGroup.remove(i);
+                    game.enemyGroup.remove(j);
+                    e.destroy();
+                    bullet.destroy();
+                });
+            }
+        }
+
+        if(game.boss)
+            game.physics.isoArcade.overlap(game.boss, bullet, function (){
+                game.bulletGroup.remove(i);
+                bullet.destroy();
+                game.boss.health--;
+            });
+    }
     game.physics.isoArcade.collide(game.stair, game.player, function() {
-        game.camera.fade('#000000');
-        game.camera.onFadeComplete.add(function () {nextLevel(game)},this);
+        if(!game.locked){
+            game.camera.fade('#000000');
+            game.camera.onFadeComplete.add(function () {nextLevel(game)},this);
+        }
     });
+    if(game.key) {
+        game.physics.isoArcade.collide(game.key, game.player, function() {
+            game.locked = false;
+            game.key.destroy();
+            game.stair.animations.play('Normal');
+        });
+    }
     sortGame(game);
     game.player.endOfFrame();
 }
@@ -59,7 +100,7 @@ function updateLiquid(liquidGroup) {
  */
 function enemyMove(game, e) {
     distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - game.player.body.x, 2) +Math.pow(e.body.y - game.player.body.y, 2));
-    if(game.decoyActive) {
+    if(game.decoyActive && game.player.decoy) {
         enemyToDecoyAngle = getAngle(game.player.decoy.body.y, e.body.y, game.player.decoy.body.x, e.body.x);
         distanceEnemyToDecoy = Math.sqrt(Math.pow(e.body.x - game.player.decoy.body.x, 2) +Math.pow(e.body.y - game.player.decoy.body.y, 2));
     } else {
@@ -83,20 +124,40 @@ function enemyMove(game, e) {
 /*
  * Handle enemy shooting
  */
-function enemyShoot(game, e) {
-    distanceEnemyToPlayer = Math.sqrt(Math.pow(e.body.x - game.player.body.x, 2) +Math.pow(e.body.y - game.player.body.y, 2));
-    if(game.decoyActive) {
-        enemyToDecoyAngle = getAngle(game.player.decoy.body.y, e.body.y, game.player.decoy.body.x, e.body.x);
-        distanceEnemyToDecoy = Math.sqrt(Math.pow(e.body.x - game.player.decoy.body.x, 2) +Math.pow(e.body.y - game.player.decoy.body.y, 2));
+function enemyShoot(game, tower) {
+    distanceEnemyToPlayer = Math.sqrt(Math.pow(tower.body.x - game.player.body.x, 2) +Math.pow(tower.body.y - game.player.body.y, 2));
+    if(game.decoyActive && game.player.decoy) {
+        enemyToDecoyAngle = getAngle(game.player.decoy.body.y, tower.body.y, game.player.decoy.body.x, tower.body.x);
+        distanceEnemyToDecoy = Math.sqrt(Math.pow(tower.body.x - game.player.decoy.body.x, 2) +Math.pow(tower.body.y - game.player.decoy.body.y, 2));
     } else {
         distanceEnemyToDecoy = Infinity;
     }
-    enemyToPlayerAngle = getAngle(game.player.body.y, e.body.y, game.player.body.x, e.body.x);
-    if(distanceEnemyToPlayer > e.radius && distanceEnemyToDecoy > e.radius) {
-    } else if(distanceEnemyToDecoy <= e.radius) {
-        console.log("shooting decoy");
-    } else {
-        console.log("shooting player");
+    enemyToPlayerAngle = getAngle(game.player.body.y, tower.body.y, game.player.body.x, tower.body.x);
+    if(distanceEnemyToPlayer > tower.radius && distanceEnemyToDecoy > tower.radius) {
+    } else{
+        if(!tower.delayCounter){
+            var bullet = game.add.isoSprite(tower.body.x,tower.body.y,0,'Bullet', 0);
+            bullet.scale.setTo(0.4,0.4);
+            game.physics.isoArcade.enable(bullet);
+            bullet.duration = 60;
+            bullet.speed = 100;
+            bullet.alpha = 1;
+            bullet.collideWorldBounds = true;
+            bullet.body.allowGravity = false;
+            bullet.anchor.set(0.5,0.5,0.5);
+
+
+            var angle = 0;
+            if(distanceEnemyToDecoy <= tower.radius) {
+                angle = getAngle(bullet.body.y,game.player.decoy.body.y,bullet.body.x, game.player.decoy.body.x); 
+            } else {
+                angle = getAngle(bullet.body.y,game.player.body.y,bullet.body.x, game.player.body.x); 
+            }
+            bullet.body.velocity.x =  -Math.cos(angle) * 250;
+            bullet.body.velocity.y =  -Math.sin(angle) * 250;
+            game.bulletGroup.add(bullet);
+            tower.delayCounter = tower.delay;
+        }
     }
 }
 
@@ -118,10 +179,17 @@ function updateEnemies(game) {
         if(e.shoots) {
             enemyShoot(game,e);
         }
-        game.physics.isoArcade.overlap(e, game.player, function() {
-            game.player.takeDamage(1);
-        });
+        if(e.name == "Tower") {
+            game.physics.isoArcade.collide(e, game.player);
+        } else {
+            game.physics.isoArcade.overlap(e, game.player, function() {
+                game.player.takeDamage(1);
+            });
+        }
 
+        if(e.delayCounter > 0){
+            e.delayCounter--;
+        }
 
         // Equation of circle to draw vision radius
         if(game.showRadius){

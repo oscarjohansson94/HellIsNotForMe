@@ -26,6 +26,7 @@ function loadAssets(game){
     game.load.spritesheet('FireSprite', '../Res/Images/SpriteSheet/fireAnimation.png', 142,238, 4); 
     game.load.spritesheet('Shield', '../Res/Images/SpriteSheet/Shield.png', 201,100, 8); 
     game.load.spritesheet('Boss', '../Res/Images/SpriteSheet/bossAtlas.png', 350,300, 30); 
+    game.load.spritesheet('Stair', '../Res/Images/SpriteSheet/stairAtlas.png', 256,400, 2);
 
     // Load images
     game.load.image('HealthBar', '../Res/Images/SpriteSheet/healthBar.png');
@@ -39,7 +40,6 @@ function loadAssets(game){
     game.load.image('EButtonPressed', '../Res/Images/SpriteSheet/EButtonPressed.png');
     game.load.image('RButton', '../Res/Images/SpriteSheet/RButton.png');
     game.load.image('RButtonPressed', '../Res/Images/SpriteSheet/RButtonPressed.png');
-    game.load.image('Stair', '../Res/Images/SpriteSheet/Stair.png');
     game.load.image('ButtonLocked', '../Res/Images/SpriteSheet/ButtonLocked.png');
     game.load.image('Radius', '../Res/Images/SpriteSheet/Radius.png');
     game.load.image('Bullet', '../Res/Images/SpriteSheet/bullet.png');
@@ -48,12 +48,13 @@ function loadAssets(game){
     game.load.image('Tower', '../Res/Images/SpriteSheet/Tower.png');
     game.load.image('Pause', '../Res/Images/SpriteSheet/pause.png');
     game.load.image('Reset', '../Res/Images/SpriteSheet/reset.png');
+    game.load.image('Key', '../Res/Images/SpriteSheet/key.png');
 
     // Load json file with map layout
     game.load.json('map', game.mapName);
 
     // Load map tiles
-    game.load.spritesheet('tiles', '../Res/Images/Tiles/tiles.png', 62,32, 17); 
+    game.load.spritesheet('tiles', '../Res/Images/SpriteSheet/tiles.png', 62,32, 17); 
 } 
 
 /* 

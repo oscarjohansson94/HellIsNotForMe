@@ -39,6 +39,7 @@ function createGame(game) {
     game.walkingGroup = game.add.group();
     game.flyingGroup = game.add.group();
     game.abilityGroup = game.add.group();
+    game.bulletGroup = game.add.group();
 
     // Scale deping on game size
     game.scaleFactor = game.width / 1280;
@@ -65,15 +66,21 @@ function createPlayerStairandInitEmptyWorld(game) {
         for(var x = 1; x < game.map.layers[0].width - 1; x++){
             var objectType = game.map.layers[1].data[y*heigth+x];
             var object;
-            if(objectType == objectEnum.STAIR) {
-                object = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,'Stair', 0);
-                object.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
-                game.physics.isoArcade.enable(object);
-                object.scale.setTo(0.4, 0.4);
-                object.body.immovable = true;
-                object.body.collideWorldBounds = true;
-                game.stair = object;
-            } else if(objectType ==  objectEnum.PLAYER) {
+            if(objectType == objectEnum.STAIR || objectType == objectEnum.LOCKEDSTAIR){
+                game.stair = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,'Stair', 0);
+                game.stair.scale.setTo(0.4, 0.4);
+                game.stair.animations.add('Normal', [0]);
+                game.stair.animations.add('Locked', [1]);
+                if(objectType == objectEnum.STAIR) {
+                    game.stair.animations.play('Normal', 0, false);
+                } else if(objectType == objectEnum.LOCKEDSTAIR) {
+                    game.stair.animations.play('Locked', 0, false);
+                }
+                game.stair.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
+                game.physics.isoArcade.enable(game.stair);
+                game.stair.body.immovable = true;
+                game.stair.body.collideWorldBounds = true;
+            }else if(objectType ==  objectEnum.PLAYER) {
 
                 game.player = game.add.isoSprite(x*tileSize - tileSize,y*tileSize - tileSize,0, 'PlayerSprite',0);
                 createPlayer(game, game.player);
@@ -82,6 +89,14 @@ function createPlayerStairandInitEmptyWorld(game) {
                 game.camera.y = game.player.body.y;
                 game.camera.follow(game.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
             }
+            else if(objectType == objectEnum.KEY) {
+                object = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'Key', 0);
+                game.physics.isoArcade.enable(object);
+                object.body.immovable = true;
+                object.body.collideWorldBounds = true;
+                game.key = object;
+            }
+
         }
     }
 }
@@ -238,22 +253,21 @@ function redrawMap(game) {
             if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BAT) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatSprite', 0, game.enemyGroup);
-                createEnemy(enemy, 'EnemyBat', 100, 150, 75, 250, true, 0xf900f5,true,false);
+                createEnemy(enemy, 'EnemyBat', 100, 150, 75, 250, true, 0xd700f9,true,false,0.3,0);
             }
             else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BATRED) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'EnemyBatRedSprite', 0, game.enemyGroup);
-                createEnemy(enemy, 'EnemyBatRed', 100, 90, 75, 400, true, 0xff3a3a,true,false);
+                createEnemy(enemy, 'EnemyBatRed', 100, 90, 75, 400, true, 0xff3a3a,true,false,0.3,0);
             }  else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.TOWER) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
                 enemy = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'Tower', 0, game.enemyGroup);
-                createEnemy(enemy, 'Tower', 100, 90, 75, 400, true, 0x000000,false,true);
+                createEnemy(enemy, 'Tower', 100, 200, 75, 400, false, 0xffa500,false,true,0.8, 50);
             }  else if(game.map.layers[1].data[y*nrTilesY+x] == objectEnum.BOSS) {
                 game.map.layers[1].data[y*nrTilesY+x] = objectEnum.EMPTY;
-                game.boss = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'Boss', 0, game.enemyGroup);
+                game.boss = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'Boss', 0);
                 createBoss(game);
-            }
-
+            }  
         }
     }
     game.lastPlayerPos = {ys: ystart, ye: yend, xs: xstart, xe: xend};
@@ -261,10 +275,92 @@ function redrawMap(game) {
 
 
 function createBoss(game) {
+    game.boss.anchor.set(0.5, 0.5, 1.0);
     game.boss.animations.add('Idle', [0,1,2]);
     game.boss.animations.add('WalkLeft', [3,4,5,6,7,8,9]);
     game.boss.animations.add('WalkRight', [10,11,12,13,14,15,16]);
     game.boss.animations.add('Spell', [20,21,22,23,24,25,26,27]);
+    game.boss.animations.play('Idle', 3, true);
+    game.boss.healthBar =  game.add.image(game.width/2 - 200*game.scaleFactor,0, 'HealthBar');
+    game.boss.healthBar.scale.setTo(0.8,0.8);
+    game.hudGroup.add(game.boss.healthBar);
+    game.boss.healthBar.fixedToCamera = true;
+    game.boss.healthBar.maxWidth = game.healthBar.width;
+    console.log(game.healthBar.width);
+    game.boss.maxHealth = 10;
+    game.boss.health = 10;
+    game.physics.isoArcade.enable(game.boss);
+    game.boss.body.collideWorldBounds = true;
+    game.boss.body.setSize(50,50,100);
+    game.boss.body.offset.setTo(100,100,0);
+    game.boss.actionEnum = {
+        IDLE1: 0,
+        WALK: 1,
+        IDLE2: 2,
+        SPELL: 3
+    }
+    game.boss.action = game.boss.actionEnum.IDLE1;
+    game.boss.actionCounter = 0;
+    game.boss.actionDuration = 200;
+    game.boss.update = function(game) {
+        if(game && game.boss && game.boss.actionEnum){
+            game.boss.healthBar.width = game.boss.healthBar.maxWidth*Math.max(game.boss.health, 0)/game.boss.maxHealth;
+            console.log(game.boss.healthBar.maxWidth, game.boss.health, game.boss.healthBar.width, game.boss.maxHealth);
+            if(game.boss.actionCounter > game.boss.actionDuration) {
+                //do action
+
+                if(game.boss.action == game.boss.actionEnum.SPELL) {
+                    var nr = Math.round(Math.random()*2) + 1;
+                    var tx = 0;
+                    var ty = 0;
+                    var nrTilesX = game.map.layers[0].width;
+                    var nrTilesY = game.map.layers[0].height;
+                    if(Math.random() < 0.5) {
+                        for(var i = 0; i < nr; i++) {
+                            tx = Math.round(Math.random() * 17) + 6;
+                            ty = Math.round(Math.random() * 12) + 12;
+                            game.map.layers[0].data[ty*nrTilesY+tx] = tileEnum.LAVA02;
+                        }
+                    } else {
+                        for(var i = 0; i < nr; i++) {
+                            tx = Math.round(Math.random() * 17) + 6;
+                            ty = Math.round(Math.random() * 12) + 12;
+                            if(Math.random() < 0.5) {
+                                game.map.layers[1].data[ty*nrTilesY+tx] = objectEnum.BAT;
+                            } else {
+                                game.map.layers[1].data[ty*nrTilesY+tx] = objectEnum.BATRED;
+                            }
+                        }
+                    }
+                }
+                game.boss.action++;
+                game.boss.action %= 4;
+                if(game.boss.action == game.boss.actionEnum.IDLE1 ||
+                    game.boss.action == game.boss.actionEnum.IDLE2) {
+                    game.boss.animations.play('Idle', 3, true);
+                    game.boss.body.velocity.x = 0;
+                    game.boss.actionDuration = 300*Math.random();
+                } else if(game.boss.action == game.boss.actionEnum.WALK) {
+                    if(Math.random() > 0.5) {
+                        game.boss.animations.play('WalkLeft', 3, true);
+                        game.boss.body.velocity.x = -50;
+                    } else {
+                        game.boss.animations.play('WalkRight', 3, true);
+                        game.boss.body.velocity.x = 50;
+                    }
+                    game.boss.actionDuration = 300*Math.random();
+                } else if(game.boss.action == game.boss.actionEnum.SPELL) {
+                    game.boss.animations.play('Spell', 3, true);
+                    game.boss.body.velocity.x = 0;
+                    game.boss.actionDuration = 150;
+                }
+
+                game.boss.actionCounter = 0;
+            } else {
+                game.boss.actionCounter++;
+            }
+        }
+    }
 }
 
 /* 
@@ -286,11 +382,11 @@ function createTile(x, y, game) {
         tile.anchor.set(0.5,1, 0);
         tile.body.immovable = true;
     } else if(tileType == tileEnum.BORDER){
-        tile = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, 0,null, 0, game.obstacleGroup);
+        tile = game.add.isoSprite(x*tileSize-tileSize,y*tileSize-tileSize, -20,null, 0, game.obstacleGroup);
         tile.enableBody = true;
         tile.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
         game.physics.isoArcade.enable(tile);
-        tile.body.setSize(tileSize,tileSize+5,tileSize+5, 0 ,0, 0);
+        tile.body.setSize(tileSize,tileSize+5,tileSize*2, 0 ,0, 0);
         tile.body.immovable = true;
         tile.body.collideWorldBounds = true;
         tile.anchor.set(0.5,1, 0);
@@ -305,25 +401,32 @@ function createTile(x, y, game) {
  * Create enemy of type BAT
  * void
  */
-function createEnemy(enemy, name, health, radius, size,speed, flying, color,moves,shoots) {
+function createEnemy(enemy, name, health, radius, size,speed, flying, color,moves,shoots,scale, shootingDelay) {
     enemy.name = name;
-    enemy.scale.setTo(0.3,0.3);
+    enemy.scale.setTo(scale,scale);
     enemy.anchor.set(0.5, 0.5, 0.5);
-    enemy.animations.add(name  + 'Left', [0,1,2,3]);
-    enemy.animations.add(name + 'FrontRight', [4,5,6]);
-    enemy.animations.add(name + 'Right', [7,8,9,10]);
-    enemy.animations.add(name + 'FrontLeft', [11,12,13]);
-    enemy.animations.add(name + 'BackRight', [14,15,16]);
-    enemy.animations.add(name + 'Back', [17,18,19,20]);
-    enemy.animations.add(name + 'BackLeft', [21,22,23]);
-    enemy.animations.add(name + 'Front', [24,25,26,27]);
-    enemy.animations.play(name + 'Back', this.animationsSpeed, true);
+    if(flying){
+        enemy.animations.add(name  + 'Left', [0,1,2,3]);
+        enemy.animations.add(name + 'FrontRight', [4,5,6]);
+        enemy.animations.add(name + 'Right', [7,8,9,10]);
+        enemy.animations.add(name + 'FrontLeft', [11,12,13]);
+        enemy.animations.add(name + 'BackRight', [14,15,16]);
+        enemy.animations.add(name + 'Back', [17,18,19,20]);
+        enemy.animations.add(name + 'BackLeft', [21,22,23]);
+        enemy.animations.add(name + 'Front', [24,25,26,27]);
+        enemy.animations.play(name + 'Back', this.animationsSpeed, true);
+    }
     enemy.maxHealth = health;
+    enemy.delay = shootingDelay;
+    enemy.delayCounter = 0;
     enemy.moves = moves;
+    game.physics.isoArcade.enable(enemy);
+    if(!enemy.moves){
+        enemy.body.immovable = true;
+    }
     enemy.shoots = shoots;
     enemy.health = health;
     enemy.radius = radius;
-    game.physics.isoArcade.enable(enemy);
     enemy.body.collideWorldBounds = true;
     enemy.body.setSize(size,size,size);
     enemy.speed =  speed;

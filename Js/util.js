@@ -5,6 +5,8 @@ var tileSize = 34;
 function debug(game, player){
     if(showDebug){
         game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
+        if(game.boss)
+        game.debug.body(game.boss, 'rgba(189, 221, 235, 0.6)', false);
         game.obstacleGroup.forEach(function(tile){
             game.debug.body(tile, 'rgba(0, 255, 0, 0.9)', false);
         });
@@ -27,17 +29,17 @@ function debug(game, player){
 var tileEnum = {
     EMPTY: 0,
     BORDER: 1,
-    FLOOR01: 3,
-    FLOOR02: 6,
-    FLOOR03: 7,
-    FLOOR04: 8,
-    FLOOR05: 9,
-    FLOOR06: 11,
-    LAVA01: 4,
-    LAVA02: 5,
-    LAVA03: 10,
-    START: 12,
-    ICE: 15
+    FLOOR01: 4,
+    FLOOR02: 7,
+    FLOOR03: 8,
+    FLOOR04: 9,
+    FLOOR05: 10,
+    FLOOR06: 12,
+    LAVA01: 5,
+    LAVA02: 6,
+    LAVA03: 11,
+    START: 13,
+    ICE: 19
 }
 
 var lavaSet = new Set([tileEnum.LAVA01, tileEnum.LAVA02, tileEnum.LAVA03]);
@@ -45,11 +47,14 @@ var floorSet = new Set([tileEnum.ICE, tileEnum.START,tileEnum.FLOOR01,tileEnum.F
 
 var objectEnum = {
     EMPTY: 0,
-    BAT: 2,
-    PLAYER: 13,
-    STAIR: 14,
-    BATRED: 16,
-    TOWER: 99
+    BAT: 3,
+    BOSS: 2,
+    PLAYER: 15,
+    STAIR: 16,
+    LOCKEDSTAIR: 17,
+    BATRED: 20,
+    KEY: 14,
+    TOWER: 18
 }
 
 function renderState(game) {
@@ -62,10 +67,10 @@ function renderState(game) {
  * sort to display correct object above other
  */
 function sortGame(game) {
-    if(game.decoyActive)
+    if(game.decoyActive && game.player.decoy)
         game.world.bringToTop(game.player.decoy);
-    game.world.bringToTop(game.enemyGroup);
     game.world.bringToTop(game.player);
+    game.world.bringToTop(game.enemyGroup);
     game.world.bringToTop(game.hudGroup);
     game.world.bringToTop(game.abilityGroup);
 }

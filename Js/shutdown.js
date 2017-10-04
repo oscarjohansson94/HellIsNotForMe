@@ -5,6 +5,8 @@
  */
 function clear(game) {
     game.portalActive = null;
+    if(game.key) 
+        game.key.destroy();
     if(game.player.shield)
         game.player.shield.destroy();
     if(game.player.fire)
@@ -22,7 +24,9 @@ function clear(game) {
     });
     game.enemyGroup.destroy();
     if(game.boss) {
+        game.boss.actionEnum = null;
         game.boss.destroy();
+        game.boss.healthBar.destroy();
     }
     game.liquidGroup.destroy();
     game.hudGroup.destroy();
@@ -39,8 +43,7 @@ function clear(game) {
         else
             game.buttons[i].pressed = null;
         if(game.buttons[i].unpressed)
-            game.buttons[i].unpressed.destroy();
-        else
+            game.buttons[i].unpressed.destroy(); else
             game.buttons[i].unpressed = null;
         game.buttons[i] = null;
         game.buttonPosition[i].x = null;

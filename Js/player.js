@@ -215,7 +215,7 @@ function createPlayer(game, player) {
         game.player.moving = true;
     }
     player.updateDecoy = function(game) {
-        if(game.decoyActive) {
+        if(game.decoyActive && game.player.decoy) {
             game.player.decoy.duration--;
             if(game.player.decoy.duration <= 0) {
                 game.player.decoy.destroy();
@@ -271,7 +271,7 @@ function createPlayer(game, player) {
             player.health -= player.damage;
             player.damage = 0;
         } else if(player.health < player.maxHealth) {
-            player.health++;
+            player.health += 0.1;
         }
         if(player.energyDrain) {
             player.energy -= player.energyDrain;
