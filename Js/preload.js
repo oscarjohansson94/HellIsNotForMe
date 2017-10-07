@@ -49,12 +49,13 @@ function loadAssets(game){
     game.load.image('Pause', '../Res/Images/SpriteSheet/pause.png');
     game.load.image('Reset', '../Res/Images/SpriteSheet/reset.png');
     game.load.image('Key', '../Res/Images/SpriteSheet/key.png');
+    game.load.image('BossIcon', '../Res/Images/Tiles/boss.png');
 
     // Load json file with map layout
     game.load.json('map', game.mapName);
 
     // Load map tiles
-    game.load.spritesheet('tiles', '../Res/Images/SpriteSheet/tiles.png', 62,32, 17); 
+    game.load.spritesheet('tiles', '../Res/Images/SpriteSheet/tiles.png', 62,32, 19); 
 } 
 
 /* 

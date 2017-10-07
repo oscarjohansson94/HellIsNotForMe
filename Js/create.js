@@ -29,6 +29,7 @@ function createGame(game) {
     // Set gravity
     game.physics.isoArcade.gravity.setTo(0, 0, -500);
     game.map = game.cache.getJSON('map');
+    game.shieldActive = false;
 
     // Create groups
     game.floorGroup = game.add.group();
@@ -140,17 +141,10 @@ function createButtons(game) {
     game.keyF.onDown.add(function() {
         game.scale.startFullScreen(false);
     });
+    game.keyO = game.input.keyboard.addKey(Phaser.Keyboard.O);
+    game.keyO.onDown.add(function() {game.state.restart()}, this);
 
-    game.pauseButton = game.add.image(game.scaleFactor * 1200,10*game.scaleFactor, 'Pause');
-    game.resetButton = game.add.image(game.scaleFactor*1146, 10*game.scaleFactor, 'Reset');
-    game.pauseButton.fixedToCamera = true;
-    game.resetButton.fixedToCamera = true;
-    game.pauseButton.inputEnable = true;
-    game.pauseButton.events.onInputDown.add(function() {console.log("p");pause(game);}, this);
 
-    game.resetButton.events.onInputDown.add(function() {console.log("p");pause(game);}, this);
-    game.hudGroup.add(game.pauseButton);
-    game.hudGroup.add(game.resetButton);
     // Add abilty keys if they are enabled
     for(var i = 0; i < 4; i++) {
         if(game.buttonState[i]){
@@ -281,12 +275,19 @@ function createBoss(game) {
     game.boss.animations.add('WalkRight', [10,11,12,13,14,15,16]);
     game.boss.animations.add('Spell', [20,21,22,23,24,25,26,27]);
     game.boss.animations.play('Idle', 3, true);
-    game.boss.healthBar =  game.add.image(game.width/2 - 200*game.scaleFactor,0, 'HealthBar');
+    game.boss.healthBarBack = game.add.image(game.width/2 - 200*game.scaleFactor,10, 'HealthBar');
+    game.boss.icon = game.add.image(game.width/2 - 270*game.scaleFactor,7, 'BossIcon');
+    game.boss.icon.fixedToCamera = true;
+    game.hudGroup.add(game.boss.icon);
+    game.boss.healthBar =  game.add.image(game.width/2 - 200*game.scaleFactor,10, 'HealthBar');
+    game.boss.healthBarBack.tint = 0x000000;
     game.boss.healthBar.scale.setTo(0.8,0.8);
+    game.boss.healthBarBack.scale.setTo(0.78,0.8);
+    game.hudGroup.add(game.boss.healthBarBack);
     game.hudGroup.add(game.boss.healthBar);
     game.boss.healthBar.fixedToCamera = true;
+    game.boss.healthBarBack.fixedToCamera = true;
     game.boss.healthBar.maxWidth = game.healthBar.width;
-    console.log(game.healthBar.width);
     game.boss.maxHealth = 10;
     game.boss.health = 10;
     game.physics.isoArcade.enable(game.boss);
@@ -304,8 +305,8 @@ function createBoss(game) {
     game.boss.actionDuration = 200;
     game.boss.update = function(game) {
         if(game && game.boss && game.boss.actionEnum){
+
             game.boss.healthBar.width = game.boss.healthBar.maxWidth*Math.max(game.boss.health, 0)/game.boss.maxHealth;
-            console.log(game.boss.healthBar.maxWidth, game.boss.health, game.boss.healthBar.width, game.boss.maxHealth);
             if(game.boss.actionCounter > game.boss.actionDuration) {
                 //do action
 
@@ -335,29 +336,44 @@ function createBoss(game) {
                 }
                 game.boss.action++;
                 game.boss.action %= 4;
+                var animSpeed = 3 * game.boss.maxHealth/game.boss.health;
                 if(game.boss.action == game.boss.actionEnum.IDLE1 ||
                     game.boss.action == game.boss.actionEnum.IDLE2) {
-                    game.boss.animations.play('Idle', 3, true);
+                    game.boss.animations.play('Idle', animSpeed, true);
                     game.boss.body.velocity.x = 0;
-                    game.boss.actionDuration = 300*Math.random();
+                    game.boss.actionDuration = 300*Math.random()*game.boss.health/game.boss.maxHealth;
                 } else if(game.boss.action == game.boss.actionEnum.WALK) {
                     if(Math.random() > 0.5) {
-                        game.boss.animations.play('WalkLeft', 3, true);
-                        game.boss.body.velocity.x = -50;
+                        game.boss.animations.play('WalkLeft', animSpeed, true);
+                        game.boss.body.velocity.x = -50*game.boss.maxHealth/game.boss.health;
                     } else {
-                        game.boss.animations.play('WalkRight', 3, true);
-                        game.boss.body.velocity.x = 50;
+                        game.boss.animations.play('WalkRight', animSpeed, true);
+                        game.boss.body.velocity.x = 50*game.boss.maxHealth/game.boss.health;
                     }
-                    game.boss.actionDuration = 300*Math.random();
+                    game.boss.actionDuration = 300*Math.random()*game.boss.health/game.boss.maxHealth;
                 } else if(game.boss.action == game.boss.actionEnum.SPELL) {
-                    game.boss.animations.play('Spell', 3, true);
+                    game.boss.animations.play('Spell', animSpeed, true);
                     game.boss.body.velocity.x = 0;
-                    game.boss.actionDuration = 150;
+                    game.boss.actionDuration = 150*game.boss.health/game.boss.maxHealth;
                 }
 
                 game.boss.actionCounter = 0;
             } else {
                 game.boss.actionCounter++;
+            }
+            if(game.boss.health <= 0) {
+                game.boss.destroy();
+                game.locked = false;
+                game.stair.animations.play('Normal');
+                game.enemyGroup.forEach(function(e) {
+                    e.destroy();
+                });
+                game.enemyGroup.destroy();
+                for(var y = 12; y <= 24; y++) {
+                    for(var x = 6; x <= 23; x++) {
+                        game.map.layers[0].data[y*nrTilesY+x] = tileEnum.FLOOR05;
+                    }
+                }
             }
         }
     }
@@ -386,6 +402,7 @@ function createTile(x, y, game) {
         tile.enableBody = true;
         tile.physicsBodyType = Phaser.Plugin.Isometric.ISOARCADE;
         game.physics.isoArcade.enable(tile);
+        game.physics.arcade.enable(tile);
         tile.body.setSize(tileSize,tileSize+5,tileSize*2, 0 ,0, 0);
         tile.body.immovable = true;
         tile.body.collideWorldBounds = true;

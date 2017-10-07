@@ -77,6 +77,9 @@ function createPlayer(game, player) {
         player.energyDrain += energy;
     }
     player.createDecoy = function(game) {
+        if(player.decoy) {
+            player.decoy.destroy();
+        }
         player.decoy = game.add.isoSprite(player.body.x,player.body.y,0,'Decoy', 0);
         game.physics.isoArcade.enable(player.decoy);
         player.decoy.duration = 60;
@@ -96,7 +99,7 @@ function createPlayer(game, player) {
         game.player.portal = game.add.isoSprite(player.body.x, player.body.y, 0, 'Portal', 0);
         game.player.portal.tel = false;
         game.physics.isoArcade.enable(player.portal);
-        game.player.portal.radius = 300;
+        game.player.portal.radius = 600;
         game.player.portal.collideWorldBounds = true;
         game.player.portal.body.allowGravity = false;
         game.player.portal.anchor.set(0.5,0.5,0.5);
@@ -124,19 +127,19 @@ function createPlayer(game, player) {
         }
     }
 
-    player.updateFire = function(map) {
+    player.updateFire = function(map, shieldActive) {
         if(player.burning){
             player.fire.body.x = player.body.x;
             player.fire.body.y = player.body.y;
             player.takeDamage(1);
         }
 
-        if(!player.Shield.visible && !player.burning && lavaSet.has(getTile(player.body.x, player.body.y, game.map))){
+        if(!shieldActive && !player.burning && lavaSet.has(getTile(player.body.x, player.body.y, game.map))){
             player.burning = true;
             player.fire = createFire(game);
 
         } else if((game.player.burning && !lavaSet.has(getTile(game.player.body.x, game.player.body.y, game.map))) 
-            || (player.Shield.visible && player.burning)){
+            || (shieldActive && player.burning)){
             player.fire.destroy();
             player.burning = false;
         }
@@ -163,7 +166,7 @@ function createPlayer(game, player) {
             if(game.player.portal && game.player.portal.tel) {
                 target = game.player.portal;
                 speed = 2000;
-                    player.angleToTarget = Math.atan2(player.portal.body.y - player.body.y, player.portal.body.x - player.body.x);
+                player.angleToTarget = Math.atan2(player.portal.body.y - player.body.y, player.portal.body.x - player.body.x);
             } else {
                 if(player.target.body)
                     player.angleToTarget = Math.atan2(player.target.body.y - player.body.y, player.target.body.x - player.body.x);
@@ -227,15 +230,17 @@ function createPlayer(game, player) {
 
         // Drain energy
         if(game.showRadius) {
-            player.reduceEnergy(1);
+            player.reduceEnergy(0.3);
             if(player.energy <= 0){
                 ButtonUp(game, 0);
             }
         } 
     }
-    player.updateShield = function() {
+    player.updateShield = function(shieldActive) {
         if(player.Shield.visible) {
-            player.reduceEnergy(1);
+            if(shieldActive) {
+                player.reduceEnergy(1);
+            }
             player.Shield.body.x = player.body.x;
             player.Shield.body.y = player.body.y ;
             player.Shield.body.z = player.body.z + 25;
@@ -257,8 +262,8 @@ function createPlayer(game, player) {
     player.update = function(game) {
         if(game){
             player.updateMove();
-            player.updateFire(game.map);
-            player.updateShield();
+            player.updateFire(game.map, game.shieldActive);
+            player.updateShield(game.shieldActive);
             player.updateRadius(game);
             player.updateDecoy(game);
             player.updatePortal(game);
@@ -271,13 +276,13 @@ function createPlayer(game, player) {
             player.health -= player.damage;
             player.damage = 0;
         } else if(player.health < player.maxHealth) {
-            player.health += 0.1;
+            player.health += 0.15;
         }
         if(player.energyDrain) {
             player.energy -= player.energyDrain;
             player.energyDrain = 0;
         } else if(player.energy < player.maxEnergy) {
-            player.energy++;
+            player.energy += 0.7;
         }
     }
 

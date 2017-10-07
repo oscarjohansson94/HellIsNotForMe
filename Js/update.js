@@ -15,17 +15,26 @@ function updateState(game) {
 
 
     updateEnemies(game);
-    game.player.update(game);
     if(game.boss){
         game.boss.update(game);
+    }
+    if(game.player.portal && game.player.portal.tel) {
+        game.physics.isoArcade.overlap(game.player, game.player.portal, function (){
+            game.player.destroyPortal(game);
+            game.player.portal.tel = false;
+            game.player.body.velocity.x = 0;
+            game.player.body.velocity.y = 0;
+        });
     }
     // Check for border collision
     game.obstacleGroup.forEach(function(b) {
         if(game.boss) {
             game.physics.isoArcade.collide(b,game.boss);
         }
-        if(!game.player.portal || (game.player.portal && !game.player.portal.tel))
+        if(!game.player.portal || (game.player.portal && !game.player.portal.tel)){
             game.physics.isoArcade.collide(b,game.player);
+        }
+
         if(game.decoyActive){
             game.physics.isoArcade.collide(b,game.player.decoy, function() {
                 game.player.decoy.destroy();
@@ -34,13 +43,18 @@ function updateState(game) {
         }
     });
 
-    if(game.player.portal && game.player.portal.tel) {
-        game.physics.isoArcade.overlap(game.player, game.player.portal, function (){
-            game.player.destroyPortal(game);
-            game.player.portal.tel = false;
-            game.player.body.velocity.x = 0;
-            game.player.body.velocity.y = 0;
-        });
+    game.player.update(game);
+            if(game.player.portal && game.showRadius) {
+                game.player.portal.radiuses.visible = true;
+                game.player.portal.radiuses.forEach(function(r) {
+                    r.theta += 0.005;
+                    r.theta %= 360;
+                    r.body.x = game.player.portal.body.x + r.radius*Math.cos(r.theta);
+                    r.body.y = game.player.portal.body.y + r.radius*Math.sin(r.theta);
+                });
+            }
+    if(!game.showRadius && game.player.portal){
+                game.player.portal.radiuses.visible = false;
     }
     for(var i = 0; i < game.bulletGroup.length; i++) {
         var bullet = game.bulletGroup.getAt(i);
@@ -75,7 +89,7 @@ function updateState(game) {
         }
     });
     if(game.key) {
-        game.physics.isoArcade.collide(game.key, game.player, function() {
+        game.physics.isoArcade.overlap(game.key, game.player, function() {
             game.locked = false;
             game.key.destroy();
             game.stair.animations.play('Normal');
@@ -183,7 +197,7 @@ function updateEnemies(game) {
             game.physics.isoArcade.collide(e, game.player);
         } else {
             game.physics.isoArcade.overlap(e, game.player, function() {
-                game.player.takeDamage(1);
+                game.player.takeDamage(0.7);
             });
         }
 
@@ -200,15 +214,7 @@ function updateEnemies(game) {
                 r.body.x = e.body.x + r.radius*Math.cos(r.theta);
                 r.body.y = e.body.y + r.radius*Math.sin(r.theta);
             });
-            if(game.player.portal) {
-                game.player.portal.radiuses.visible = true;
-                game.player.portal.radiuses.forEach(function(r) {
-                    r.theta += 0.005;
-                    r.theta %= 360;
-                    r.body.x = game.player.portal.body.x + r.radius*Math.cos(r.theta);
-                    r.body.y = game.player.portal.body.y + r.radius*Math.sin(r.theta);
-                });
-            }
+
         }  else {
             e.radiuses.visible = false;
             if(game.player.portal) {

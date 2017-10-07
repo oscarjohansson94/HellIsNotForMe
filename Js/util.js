@@ -7,6 +7,8 @@ function debug(game, player){
         game.debug.body(player, 'rgba(189, 221, 235, 0.6)', false);
         if(game.boss)
         game.debug.body(game.boss, 'rgba(189, 221, 235, 0.6)', false);
+        if(game.key && game.locked)
+        game.debug.body(game.key, 'rgba(0, 221, 235, 0.6)', false);
         game.obstacleGroup.forEach(function(tile){
             game.debug.body(tile, 'rgba(0, 255, 0, 0.9)', false);
         });
@@ -131,8 +133,11 @@ function ButtonDown(game, index) {
         if(index == 0) {
             game.showRadius = true;
         } else if(index == 1) {
+            if(game.player.energy > 2) {
             game.player.Shield.visible = true;
+            game.shieldActive = true;
             game.player.Shield.animations.play('Start', 28, true);
+            }
         } else if(index == 2) {
             if(game.player.energy >= 50) {
                 game.player.reduceEnergy(50);
@@ -143,6 +148,7 @@ function ButtonDown(game, index) {
             if(game.portalActive) {
                 game.player.activePortal(game);
             } else {
+                game.player.reduceEnergy(20);
                 game.portalActive = true;
                 game.player.createPortal(game);
             }
@@ -157,6 +163,7 @@ function ButtonUp(game, index) {
         if(index == 0) {
             game.showRadius = false;
         } else if(index == 1) {
+            game.shieldActive = false;
             game.player.Shield.animations.play('End', 28, true);
         } else if(index == 2) {
         }
