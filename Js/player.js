@@ -97,44 +97,22 @@ function createPlayer(game, player) {
 
     player.createPortal = function(game) {
         game.player.portal = game.add.isoSprite(player.body.x, player.body.y, 0, 'Portal', 0);
-        game.player.portal.tel = false;
+        game.player.tel = false;
         game.physics.isoArcade.enable(player.portal);
         game.player.portal.radius = 600;
         game.player.portal.collideWorldBounds = true;
         game.player.portal.body.allowGravity = false;
         game.player.portal.anchor.set(0.5,0.5,0.5);
-        game.player.portal.radiuses = game.add.group();
-        game.player.portal.radiuses.visible = false;
-        var theta = 0;  // angle that will be increased each loop
-        var h = game.player.portal.body.x; // x coordinate of circle center
-        var k = game.player.portal.body.y; // y coordinate of circle center
-        var step = 15;  // amount to add to theta each time (degrees)
-        while(theta < 360)
-        { 
-            var xx = game.player.portal.radius*Math.cos(theta);
-            var yy = game.player.portal.radius*Math.sin(theta);
-            var out = game.iso.project({x: xx, y: yy, z: 0});
-            var sprite = game.add.isoSprite(player.portal.body.x+xx,player.portal.body.y+yy, 0, 'Radius');
-            sprite.alpha = 0.85;
-            sprite.scale.setTo(0.3,0.3);
-            sprite.radius = game.player.portal.radius;
-            sprite.theta = theta;
-            sprite.tint = 0x00fffa;
-            game.physics.isoArcade.enable(sprite);
-            sprite.body.collideWorldBounds = true;
-            theta += step;
-            game.player.portal.radiuses.add(sprite);
-        }
     }
 
     player.updateFire = function(map, shieldActive) {
-        if(player.burning){
+        if(player.burning && !player.tel){
             player.fire.body.x = player.body.x;
             player.fire.body.y = player.body.y;
             player.takeDamage(1);
         }
 
-        if(!shieldActive && !player.burning && lavaSet.has(getTile(player.body.x, player.body.y, game.map))){
+        if(!player.tel && !shieldActive && !player.burning && lavaSet.has(getTile(player.body.x, player.body.y, game.map))){
             player.burning = true;
             player.fire = createFire(game);
 
@@ -146,7 +124,7 @@ function createPlayer(game, player) {
     };
 
     player.updateMove = function(){
-        if((!player.portal || (player.portal && !player.portal.tel))&& getTile(player.body.x, player.body.y, game.map) == tileEnum.EMPTY) {
+        if((!player.portal || (player.portal && !player.tel))&& getTile(player.body.x, player.body.y, game.map) == tileEnum.EMPTY) {
             game.add.tween(player.scale).to({x:0, y:0},400, "Linear",true);
             game.camera.fade('#000000');
             game.camera.onFadeComplete.add(function () {die(game)},this);
@@ -163,7 +141,10 @@ function createPlayer(game, player) {
         if(player.moving) {
             var target;
             var speed;
-            if(game.player.portal && game.player.portal.tel) {
+            if(game.player.portal && game.player.tel) {
+                player.target.body.x = game.player.portal.body.x;
+                player.target.body.y = game.player.portal.body.y;
+
                 target = game.player.portal;
                 speed = 2000;
                 player.angleToTarget = Math.atan2(player.portal.body.y - player.body.y, player.portal.body.x - player.body.x);
@@ -193,28 +174,15 @@ function createPlayer(game, player) {
 
     player.destroyPortal = function(game) {
         game.portalActive = false;
-        game.player.portal.tel = false;
+        game.player.tel = false;
 
-        player.portal.radiuses.forEach(function(r) {
-            r.destroy();
-        });
-        player.portal.radiuses.destroy();
         player.portal.destroy();
 
     }
 
-    player.updatePortal = function(game) {
-        if(game.portalActive && game.player.portal) {
-            distancePlayerToPortal = Math.sqrt(Math.pow(game.player.portal.body.x - game.player.body.x, 2) +Math.pow(game.player.portal.body.y - game.player.body.y, 2));
-            if(distancePlayerToPortal > game.player.portal.radius) {
-                player.destroyPortal(game);
-
-            }
-        }
-    }
 
     player.activePortal = function(game) {
-        player.portal.tel = true;
+        player.tel = true;
         game.player.moving = true;
     }
     player.updateDecoy = function(game) {
@@ -253,8 +221,24 @@ function createPlayer(game, player) {
 
     player.checkDeath = function(game) {
         // Die
-        if(player.health <= 0){
-            game.camera.fade('#000000');
+        if(player.health <= 0 && !player.dead){
+            player.dead = true;
+            var deadPlayer = game.add.isoSprite(game.player.body.x, game.player.body.y, 0,'PlayerDead',0);  
+            deadPlayer.anchor.setTo(0.5, 0.5, 0.5);
+            game.physics.isoArcade.enable(deadPlayer);
+            deadPlayer.body.collideWorldBounds = true;
+            game.add.tween(deadPlayer).to({alpha: 0},1000, "Linear", true, 1000);
+            game.add.tween(deadPlayer.body.velocity).to({x: -200, y: -200},0, "Linear", true, 0);
+            deadPlayer.scale.setTo(0.3, 0.3);
+            game.camera.follow(deadPlayer);
+            timer3 = game.time.create(false);
+            timer3.loop(2000, function() {
+                deadPlayer.destroy();
+                timer3.destroy();
+            }, this);
+            timer3.start();
+            game.player.visible = false;
+            game.camera.fade('#000000', 1900);
             game.camera.onFadeComplete.add(function () {die(game)},this);
         }
     }
@@ -266,7 +250,6 @@ function createPlayer(game, player) {
             player.updateShield(game.shieldActive);
             player.updateRadius(game);
             player.updateDecoy(game);
-            player.updatePortal(game);
             player.checkDeath(game);
         }
     }

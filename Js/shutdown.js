@@ -9,6 +9,9 @@ function clear(game) {
         game.key.destroy();
     if(game.player.shield)
         game.player.shield.destroy();
+    if(game.deadBoss) {
+        game.deadBoss.destroy();
+    }
     if(game.player.fire)
         game.player.fire.destroy();
     if(game.player.decoy)

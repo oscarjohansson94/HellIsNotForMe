@@ -94,7 +94,9 @@ function createPlayerStairandInitEmptyWorld(game) {
                 object = game.add.isoSprite(x*tileSize - tileSize, y*tileSize - tileSize, 0, 'Key', 0);
                 game.physics.isoArcade.enable(object);
                 object.body.immovable = true;
+                object.body.setSize(60, 60, 50);
                 object.body.collideWorldBounds = true;
+                object.body.offset.setTo(-30,-10 ,0);
                 game.key = object;
             }
 
@@ -304,7 +306,7 @@ function createBoss(game) {
     game.boss.actionCounter = 0;
     game.boss.actionDuration = 200;
     game.boss.update = function(game) {
-        if(game && game.boss && game.boss.actionEnum){
+        if(game && game.boss && game.boss.actionEnum && !game.deadBoss){
 
             game.boss.healthBar.width = game.boss.healthBar.maxWidth*Math.max(game.boss.health, 0)/game.boss.maxHealth;
             if(game.boss.actionCounter > game.boss.actionDuration) {
@@ -362,16 +364,34 @@ function createBoss(game) {
                 game.boss.actionCounter++;
             }
             if(game.boss.health <= 0) {
-                game.boss.destroy();
-                game.locked = false;
-                game.stair.animations.play('Normal');
-                game.enemyGroup.forEach(function(e) {
-                    e.destroy();
-                });
-                game.enemyGroup.destroy();
-                for(var y = 12; y <= 24; y++) {
-                    for(var x = 6; x <= 23; x++) {
-                        game.map.layers[0].data[y*nrTilesY+x] = tileEnum.FLOOR05;
+                if(!game.deadBoss) {
+                    game.deadBoss = game.add.isoSprite(game.boss.body.x, game.boss.body.y, 0, 'BossDead', 0); 
+                    game.camera.follow(game.deadBoss, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+                    timer = game.time.create(false);
+                    timer.loop(2000, function() {
+                        game.camera.follow(game.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+                        timer.destroy();
+                    }, this);
+                    timer.start();
+                    game.physics.isoArcade.enable(game.deadBoss);
+                    game.deadBoss.body.collideWorldBounds = true;
+                    game.deadBoss.body.velocity.x = -100;
+                    game.deadBoss.body.velocity.y = -100;
+                    game.add.tween(game.deadBoss).to({alpha: 0},1000, "Linear", true, 1000);
+                    game.add.tween(game.deadBoss.body.velocity).to({x: -100, y: -100},3000, "Linear", true, 1000);
+                    game.deadBoss.anchor.set(0.5,0.5,1.0);
+                    game.boss.destroy();
+                    game.locked = false;
+                    game.stair.animations.play('Normal');
+                    game.enemyGroup.forEach(function(e) {
+                        e.destroy();
+                    });
+                    game.enemyGroup.destroy();
+                    var nrTilesY = game.map.layers[0].height;
+                    for(var y = 12; y <= 24; y++) {
+                        for(var x = 6; x <= 23 ; x++) {
+                            game.map.layers[0].data[y*nrTilesY+x] = tileEnum.FLOOR05;
+                        }
                     }
                 }
             }

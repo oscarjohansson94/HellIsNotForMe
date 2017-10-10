@@ -50,6 +50,9 @@ function loadAssets(game){
     game.load.image('Reset', '../Res/Images/SpriteSheet/reset.png');
     game.load.image('Key', '../Res/Images/SpriteSheet/key.png');
     game.load.image('BossIcon', '../Res/Images/Tiles/boss.png');
+    game.load.image('BossDead', '../Res/Images/SpriteSheet/bossDead.png');
+    game.load.image('BatDead', '../Res/Images/SpriteSheet/EnemyDead.png');
+    game.load.image('PlayerDead', '../Res/Images/SpriteSheet/PlayerDead.png');
 
     // Load json file with map layout
     game.load.json('map', game.mapName);

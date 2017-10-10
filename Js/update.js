@@ -18,10 +18,10 @@ function updateState(game) {
     if(game.boss){
         game.boss.update(game);
     }
-    if(game.player.portal && game.player.portal.tel) {
+    if(game.player.portal && game.player.tel) {
         game.physics.isoArcade.overlap(game.player, game.player.portal, function (){
             game.player.destroyPortal(game);
-            game.player.portal.tel = false;
+            game.player.tel = false;
             game.player.body.velocity.x = 0;
             game.player.body.velocity.y = 0;
         });
@@ -31,7 +31,7 @@ function updateState(game) {
         if(game.boss) {
             game.physics.isoArcade.collide(b,game.boss);
         }
-        if(!game.player.portal || (game.player.portal && !game.player.portal.tel)){
+        if(!game.player.portal || (game.player.portal && !game.player.tel)){
             game.physics.isoArcade.collide(b,game.player);
         }
 
@@ -44,18 +44,7 @@ function updateState(game) {
     });
 
     game.player.update(game);
-            if(game.player.portal && game.showRadius) {
-                game.player.portal.radiuses.visible = true;
-                game.player.portal.radiuses.forEach(function(r) {
-                    r.theta += 0.005;
-                    r.theta %= 360;
-                    r.body.x = game.player.portal.body.x + r.radius*Math.cos(r.theta);
-                    r.body.y = game.player.portal.body.y + r.radius*Math.sin(r.theta);
-                });
-            }
-    if(!game.showRadius && game.player.portal){
-                game.player.portal.radiuses.visible = false;
-    }
+
     for(var i = 0; i < game.bulletGroup.length; i++) {
         var bullet = game.bulletGroup.getAt(i);
         game.physics.isoArcade.overlap(game.player, bullet, function (){
@@ -67,6 +56,20 @@ function updateState(game) {
             var e = game.enemyGroup.getAt(j);
             if(e.moves) {
                 game.physics.isoArcade.overlap(e, bullet, function (){
+                    var dead = game.add.isoSprite(e.body.x, e.body.y, 0, 'BatDead', 0); 
+                    dead.scale.setTo(0.3, 0.3);
+
+                    dead.anchor.setTo(0.5, 0.5, 0.5);
+                    game.physics.isoArcade.enable(dead);
+                    dead.body.collideWorldBounds = true;
+                    game.add.tween(dead).to({alpha: 0},1000, "Linear", true, 1000);
+                    game.add.tween(dead.body.velocity).to({x: -100, y: -100},0, "Linear", true, 0);
+                    timer2 = game.time.create(false);
+                    timer2.loop(2000, function() {
+                        dead.destroy();
+                        timer2.destroy();
+                    }, dead);
+                    timer2.start();
                     game.bulletGroup.remove(i);
                     game.enemyGroup.remove(j);
                     e.destroy();
