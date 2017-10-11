@@ -220,9 +220,6 @@ function updateEnemies(game) {
 
         }  else {
             e.radiuses.visible = false;
-            if(game.player.portal) {
-                game.player.portal.radiuses.visible = false;
-            }
         }
 
     }

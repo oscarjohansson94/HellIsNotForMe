@@ -110,8 +110,8 @@ function getAnimationDirection(angle) {
  * int
  */
 function getTile(inx, iny, map) {
-    var xx = Math.ceil(inx /tileSize  - 1)+2;
-    var yy = Math.ceil(iny/tileSize - 1)+2;
+    var xx = Math.ceil((inx-20) /tileSize  - 1)+2;
+    var yy = Math.ceil((iny-20)/tileSize - 1)+2;
     var height = map.layers[0].height;
     if(yy >= 0 && yy < height && xx >= 0 && xx < map.layers[0].width) {
         return map.layers[0].data[yy*height + xx];
@@ -173,7 +173,6 @@ function ButtonUp(game, index) {
 function pause(game) {
     game.paused = !game.paused;
 }
-
 
 
 function die(game){

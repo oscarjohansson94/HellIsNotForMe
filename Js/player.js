@@ -129,7 +129,7 @@ function createPlayer(game, player) {
             game.camera.fade('#000000');
             game.camera.onFadeComplete.add(function () {die(game)},this);
         }
-        if(game.input.activePointer.isDown) {
+        if(player.visible && game.input.activePointer.isDown) {
             var out = {x: 0, y: 0};
             game.iso.unproject(game.input.activePointer.position, out);
             if(getTile(out.x, out.y, game.map) != tileEnum.EMPTY && getTile(out.x, out.y, game.map) != tileEnum.BORDER) {
@@ -155,9 +155,9 @@ function createPlayer(game, player) {
                 target = player.target;
             }
             game.physics.isoArcade.overlap(player,target, function() {player.targetReached = true;});
-            if(player.targetReached){
+            if(!player.visible || player.targetReached){
                 player.moving = false;
-                if(getTile(player.body.x, player.body.y, game.map) != tileEnum.ICE){
+                if(!player.visible || getTile(player.body.x, player.body.y, game.map) != tileEnum.ICE){
                     player.body.velocity.x = 0;
                     player.body.velocity.y = 0;
                 }
