@@ -10,9 +10,8 @@ function createBoss(game) {
     game.boss.animations.play('Idle', 3, true);
     game.boss.healthBarBack = game.add.image(game.width/2 - 200*game.scaleFactor,10, 'HealthBar');
     game.boss.icon = game.add.image(game.width/2 - 270*game.scaleFactor,7, 'BossIcon');
-    game.boss.icon.fixedToCamera = true;
-    game.hudGroup.add(game.boss.icon);
-    game.boss.healthBar =  game.add.image(game.width/2 - 200*game.scaleFactor,10, 'HealthBar');
+    game.boss.icon.fixedToCamera = true; 
+    game.hudGroup.add(game.boss.icon); game.boss.healthBar =  game.add.image(game.width/2 - 200*game.scaleFactor,10, 'HealthBar');
     game.boss.healthBarBack.tint = 0x000000;
     game.boss.healthBar.scale.setTo(0.8,0.8);
     game.boss.healthBarBack.scale.setTo(0.78,0.8);
@@ -82,13 +81,13 @@ function createBoss(game) {
                     } else {
                         game.boss.animations.play('WalkRight', animSpeed, true);
                         game.boss.body.velocity.x = 50*game.boss.maxHealth/game.boss.health;
-                    }
-                    game.boss.actionDuration = 300*Math.random()*game.boss.health/game.boss.maxHealth;
+                    } 
+                    game.boss.actionDuration = 300*Math.random()*game.boss.health/game.boss.maxHealth; 
                 } else if(game.boss.action == game.boss.actionEnum.SPELL) {
-                    game.boss.animations.play('Spell', animSpeed, true);
-                    game.boss.body.velocity.x = 0;
-                    game.boss.actionDuration = 150*game.boss.health/game.boss.maxHealth;
-                }
+                        game.boss.animations.play('Spell', animSpeed, true);
+                        game.boss.body.velocity.x = 0;
+                        game.boss.actionDuration = 150*game.boss.health/game.boss.maxHealth;
+                    }
 
                 game.boss.actionCounter = 0;
             } else {

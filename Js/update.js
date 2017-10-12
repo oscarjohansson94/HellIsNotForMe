@@ -3,21 +3,27 @@
  */
 
 /* 
- * Main function called
+ * Main function called when updating the game
+ * Observe that the update order matters with collision
  */
 function updateState(game) {
 
+    // make liquid (lava) look naturall
     updateLiquid(game.liquidGroup);
 
     // Scale health and energy bar deping on life
     game.healthBar.width = game.healthBar.maxWidth*Math.max(game.player.health, 0)/game.player.maxHealth;
     game.energyBar.width = game.energyBar.maxWidth*Math.max(game.player.energy, 0)/game.player.maxEnergy;
 
-
+    // update enemies
     updateEnemies(game);
+
+    // update boss if it exist
     if(game.boss){
         game.boss.update(game);
     }
+
+    // teleporting functionallity
     if(game.player.portal && game.player.tel) {
         game.physics.isoArcade.overlap(game.player, game.player.portal, function (){
             game.player.destroyPortal(game);
@@ -26,6 +32,37 @@ function updateState(game) {
             game.player.body.velocity.y = 0;
         });
     }
+
+    borderCollision(game);
+    
+    // update player
+    game.player.update(game);
+
+
+    updateBullets(game);
+
+    // goal collision
+    game.physics.isoArcade.collide(game.stair, game.player, function() {
+        if(!game.locked){
+            game.camera.fade('#000000');
+            game.camera.onFadeComplete.add(function () {nextLevel(game)},this);
+        }
+    });
+    // key collision
+    if(game.key) {
+        game.physics.isoArcade.overlap(game.key, game.player, function() {
+            game.locked = false;
+            game.key.destroy();
+            game.stair.animations.play('Normal');
+        });
+    }
+    // topologic sorting for graphics
+    sortGame(game);
+    // update life generation and loss  etc.
+    game.player.endOfFrame();
+}
+
+function borderCollision(game) {
     // Check for border collision
     game.obstacleGroup.forEach(function(b) {
         if(game.boss) {
@@ -42,9 +79,12 @@ function updateState(game) {
             );
         }
     });
+}
 
-    game.player.update(game);
-
+/* 
+ * update bullets, checking for collision
+ */
+function updateBullets(game) {
     for(var i = 0; i < game.bulletGroup.length; i++) {
         var bullet = game.bulletGroup.getAt(i);
         game.physics.isoArcade.overlap(game.player, bullet, function (){
@@ -58,7 +98,6 @@ function updateState(game) {
                 game.physics.isoArcade.overlap(e, bullet, function (){
                     var dead = game.add.isoSprite(e.body.x, e.body.y, 0, 'BatDead', 0); 
                     dead.scale.setTo(0.3, 0.3);
-
                     dead.anchor.setTo(0.5, 0.5, 0.5);
                     game.physics.isoArcade.enable(dead);
                     dead.body.collideWorldBounds = true;
@@ -85,21 +124,6 @@ function updateState(game) {
                 game.boss.health--;
             });
     }
-    game.physics.isoArcade.collide(game.stair, game.player, function() {
-        if(!game.locked){
-            game.camera.fade('#000000');
-            game.camera.onFadeComplete.add(function () {nextLevel(game)},this);
-        }
-    });
-    if(game.key) {
-        game.physics.isoArcade.overlap(game.key, game.player, function() {
-            game.locked = false;
-            game.key.destroy();
-            game.stair.animations.play('Normal');
-        });
-    }
-    sortGame(game);
-    game.player.endOfFrame();
 }
 
 /*

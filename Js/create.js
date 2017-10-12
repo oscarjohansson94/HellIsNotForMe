@@ -269,7 +269,6 @@ function redrawMap(game) {
     game.lastPlayerPos = {ys: ystart, ye: yend, xs: xstart, xe: xend};
 }
 
-
 /* 
  * Create and return a tile
  */

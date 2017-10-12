@@ -21,4 +21,4 @@ game.state.add('state_level14', state_level14);
 game.state.add('state_level15', state_level15);
 game.state.add('state_level16', state_level16);
 
-game.state.start('state_level12');
+game.state.start('state_fullscreen');
