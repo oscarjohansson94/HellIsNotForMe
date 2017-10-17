@@ -46,8 +46,6 @@ function loadAssets(game){
     game.load.image('Decoy', '../Res/Images/SpriteSheet/decoy.png');
     game.load.image('Portal', '../Res/Images/SpriteSheet/teleport.png');
     game.load.image('Tower', '../Res/Images/SpriteSheet/Tower.png');
-    game.load.image('Pause', '../Res/Images/SpriteSheet/pause.png');
-    game.load.image('Reset', '../Res/Images/SpriteSheet/reset.png');
     game.load.image('Key', '../Res/Images/SpriteSheet/key.png');
     game.load.image('BossIcon', '../Res/Images/Tiles/boss.png');
     game.load.image('BossDead', '../Res/Images/SpriteSheet/bossDead.png');
